@@ -1,0 +1,42 @@
+@startuml
+
+actor User as U
+participant Wallet as W
+box Issuer
+participant "Init" as init
+participant "Authorize" as AS
+participant "Token" as T
+participant "Credentials" as P
+participant "Poll Credentials" as I
+end box
+autoactivate on
+hide footbox
+
+U -> W: interact
+note over W: Wallet discovers input material\nrequired to request issuance\nof a certain credential (Optional)
+
+W -> init: init_presentation
+return presentation_nonce
+
+W -> W: prepare presentations (bound to presentation_nonce)
+deactivate W
+
+W -> AS: authorize (credential type in claims parameter, nonce, code_challenge and (opt)presentations)
+
+note over AS: Issuer will authenticate user or utilize credentials or assertions to identify user. \noptions: local login, callback to wallet (OIDC4VPs), federated login (via OpenID or SAML), ...
+
+return code
+
+W -> T: token (code, code_verifier)
+return access_token, id_token
+
+W->P: credentials (access_token, bindable proofs)
+
+note over P: access token hash is used as challenge
+
+return credentials or acceptance_token
+
+W->I: poll_credential (accptance_token)
+return credentials
+
+@enduml

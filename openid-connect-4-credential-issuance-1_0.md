@@ -38,27 +38,7 @@ This specification defines an extension of OpenID Connect to allow holders to re
 
 This specification extends OpenID Connect with support for issuance of verifiable credentials, e.g. in the form of W3C Verifiable Credentials. This allows existing OpenID Connect OPs to extends their service and become credential issuer. It also allows new applications built using Verifiable Credentials to utilize OpenID Connect as integration and interoperability layer between credential holders and issuers. 
 
-# Use Cases
-
-## Holder initiated credential issuance
-
-A user comes across an app where she needs to present a credential, e.g. a bank identity credential. She starts the flow presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is sent to the issuers user experience (web site or app). There the user authenticates and is asked for consent to issuer the required credential into her wallet. She consents and is sent back to the wallet, where she is informed that a credential was sucessfully created and stored in the wallet.
-
-## Holder initiated credential issuance (with pre-requisites)
-
-A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the flow presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that purpose. The user confirms and is sent to the issuers user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet.
-
-## Issuer initiated credential issuance
-
-The user browses her university's home page, searching for a way to obtain a digital diploma. She finds the respective page, which shows a link "request your digital diploma". She clicks on this link and is being sent to her digital wallet. The wallet notfies her that an issuer offered to issue an credential of type "diploma". She confirms this inquiry and is being sent to the university's credential issuance service. She logs with her university login and is being asked to consent to the creation of a digital diploma. She confirms and is sent back to her wallet. There she is notified of the sucessful creation of the digital diploma.  
-
-## Issuer initiated credential issuance (cross device/ credential retrival only)
-
-The user visits the administration office of her university in order to obtain a digital diploma. The university staff checks her student card and looks up her university diploma in the universities IT system. The office staff then starts the issuance process. The user is asked to scan a QR Code in order to retrieve the digital diploma. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the offer to create a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
-
-## Deferred Credential Issuance
-
-The user wants to obtain a digital criminal record certificate. She starts the journey in her wallet and is sent to the issuer service of the responsible government authority. She logs in with her eID and requests the issuance of the certificate. She is being notified that the issuance of the certificate will take a couple of days due to necessary background checks by the authority. She confirms and is sent back to the wallet. The wallet shows a hint in the credential list indicating that issuance of the digital criminal record certificate is under way. A few days later, she receives an e-Mail from the authority that the certificate was sucessfully issued. She visits her wallet, where she is asked after startup whether she wants to download the certificate. She confirms and the new credential is retrieved and stored in her wallet. 
+OpenID Connect is an obvious choice for this use case since it already allows Relying Parties to request identity assertions. Verifiable Credentials are very similar in that they allow an Issuer to assert End-User claims. In contrast to identity assertions, a verifiable credential follows a pre-defined schema (the credential type) and is bound to key material allowing the holder to proof the legitimate possession of the credential. This allows presentation of the credential without direct involvment of the credential issuer. This specification caters for those differences. 
 
 # Terminology
 
@@ -82,619 +62,149 @@ W3C Verifiable Credential Objects
 
 Both verifiable credentials and verifiable presentations
 
+# Use Cases
+
+## Holder initiated credential issuance
+
+A user comes across an app where she needs to present a credential, e.g. a bank identity credential. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is sent to the issuer's user experience (web site or app). There the user authenticates and is asked for consent to issue the required credential into her wallet. She consents and is sent back to the wallet, where she is informed that a credential was sucessfully created and stored in the wallet.
+
+## Holder initiated credential issuance (with pre-requisites)
+
+A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that purpose. The user confirms and is sent to the issuer's user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet.
+
+## Issuer initiated credential issuance
+
+The user browses her university's home page, searching for a way to obtain a digital diploma. She finds the respective page, which shows a link "request your digital diploma". She clicks on this link and is being sent to her digital wallet. The wallet notfies her that an issuer offered to issue a diploma credential. She confirms this inquiry and is being sent to the university's credential issuance service. She logs in with her university login and is being asked to consent to the creation of a digital diploma. She confirms and is sent back to her wallet. There she is notified of the sucessful creation of the digital diploma.  
+
+## Issuer initiated credential issuance (cross device/ credential retrival only)
+
+The user visits the administration office of her university in order to obtain a digital diploma. The university staff checks her student card and looks up her university diploma in the universitie's IT system. The office staff then starts the issuance process. The user is asked to scan a QR Code in order to retrieve the digital diploma. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the offer to create a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
+
+## Deferred Credential Issuance
+
+The user wants to obtain a digital criminal record certificate. She starts the journey in her wallet and is sent to the issuer service of the responsible government authority. She logs in with her eID and requests the issuance of the certificate. She is being notified that the issuance of the certificate will take a couple of days due to necessary background checks by the authority. She confirms and is sent back to the wallet. The wallet shows a hint in the credential list indicating that issuance of the digital criminal record certificate is under way. A few days later, she receives an e-Mail from the authority that the certificate was sucessfully issued. She visits her wallet, where she is asked after startup whether she wants to download the certificate. She confirms and the new credential is retrieved and stored in her wallet. 
+
+# Requirements
+
+This section describes the requirements this specification aims to fulfill beyond the use cases described above. 
+
+## Flow types
+
+* Proof of possession of key material
+  * Support all kinds of proofs (e.g. signatures, blinded proofs) but also issuance w/o proof
+  * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8
+  * The proof mechanisms shall be complementary to OAuth/OIDC mechanisms for request signatures, client authentication, and PoP in order to allow for its parallel usage.  
+* It shall be possible to request a single credential as well to request multiple credentials in the same request. Examples of the latter include: 
+  * credentials containing different claims for the same user (micro/mono credentials) bound to the same key material
+  * batch issuance of multiple credentials of the same type bound to different key material (see mDL)
+* It shall be possible to issue multiple credentials based on same consent (e.g. different formats and/or keys - did:key followed by did:ebsi) 
+* Support for asynchronous issuance of crredentials
+* User authentication and identification
+  * Issuer shall be able dynamically obtain further data and be able to authenticate the user at their discretion
+  * Holder shall be able to pass existing credentials (as presentations) or identity assertions to the issuance flow
+    * Assisted flow (utilizing credential manifest)
+    * Presentations/assertions must be protected against replay
+* It shall be possible to request standard OIDC claims and credentials in the same flow (to implement wallet onboarding, see EBSI/ESSIF onboarding)
+* Support for Credential metadata (holder shall be able to determine the types of credential an issuer is able to issue)
+* Ensure OP is authoritative for respective credential issuer (OP (OIDC issuer URL) <-> Issuer ID (DID))
+* Incorporate/utilize existing specs
+  * W3C VC HTTP API(?)
+  * DIF Credential manifest(?)
+
 # Overview 
 
-This specification defines mechanisms to allow RPs to request and OPs to provide Verifiable Presentations via OpenID Connect. 
-
-Verifiable Presentations are used to present claims along with cryptographic proofs of the link between presenter and subject of the verifiable credentials it contains. A verifiable presentation can contain a subset of claims asserted in a certain credential (selective disclosure) and it can assemble claims from different credentials. 
-
-There are two credential formats to VCs and VPs: JSON or JSON-LD. There are also two proof formats to VCs and VPs: JWT and Linked Data Proofs. Each of those formats has different properties and capabilites and each of them comes with different proof types. Proof formats are agnostic to the credential format chosen. However, the JSON credential format is commonly used with JSON Web Signatures (see [@VC_DATA], section 6.3.1). JSON-LD is commonly used with different kinds of Linked Data Proofs and JSON Web Signatures (see [@VC_DATA], section 6.3.2). Applications can use all beforementioned assertion and proof formats with this specification. 
-
-This specification introduces the following representations to exchange verifiable credentials objectes between OpenID OPs and RPs.
-
-* The new token type "VP Token" used as generic container for verifiable presentation objects in authentication and token responses in addition to ID Tokens (see (#vp_token)).
-* The JWT claim `verifiable_presentations` used as generic container to embed verifiable presentation objects into ID tokens or userinfo responses (see (#verifiable_presentations)).
-
-Verifiers request verifiable presentations using the `claims` parameter as defined in (@!OpenID) and syntax as defined in DIF Presentation Exchange [@!DIF.PresentationExchange].
-
-# vp_token {#vp_token}
-
-The response parameter `vp_token` is defined as follows:
-
-* `vp_token`: a parameter that either directly contains a verifiable presentation or it contains a JSON array with multiple verifiable presentations. 
-
-## Request
-
-A VP Token is requested by adding a new top level element `vp_token` to the `claims` parameter. This element contains a `presentation_definition` element as defined in Section 4 of [@!DIF.PresentationExchange].
-
-Please note this draft defines a profile of [@!DIF.PresentationExchange] as follows: 
-
-* The `format` element underneath the `presentation_definition` that represents supported presentation formats, proof types, and algorithms is not supported. Those are determined using new RP and OP metadata (see (#metadata)). 
-
-The request syntax is illustrated in the following example:
-
-<{{examples/request/vp_token_type_only.json}}
-
-This simple example requests the presentation of a credential of a certain type. 
-
-The following example
-
-<{{examples/request/vp_token_type_and_claims.json}}
-
-shows how the RP can request selective dislosure or certain claims from a credential of a particular type. 
-
-RPs can also ask for alternative credentials being presented, which is shown in the next example:
-
-<{{examples/request/vp_token_alternative_credentials.json}}
-
-## Response
-
-A `vp_token` MUST be provided in the same response as the `id_token` of the respective OpenID Connect transaction. Depending on the response/grant type, this can be either the authentication response or the token response. 
-
-The corresponding ID Token will always contain an element `_vp_token` containing additional metadata about the verifiable presentation(s) in the VP token. This element is defined as follows;
-
-`_vp_token`: JWT claim containing an element of type `presentation_submission`. This `presentation_submission` element links the input descriptor identifiers as specified in the corresponding request to the respective verifiable presentations within the `vp_token` along with format information. The root of the path expressions in the descriptor map is the respective `vp_token`. 
-
-In case the OP returns a single verifiable presentation in the `vp_token`, the `vp_token` MUST directly contain the verifiable presentation. The descriptor map would then contain a simple path expression "$".
-
-This is an example of a `vp_token` containing a single verifiable presentation:
-
-<{{examples/response/vp_token_raw_ldp_vp.json}}
-
-The respective `id_token` is:
-
-<{{examples/response/id_token_ref_vp_token.json}}
-
-A `descriptor_map` element MAY also contain a `path_nested` element refering to the actual credential carried in the respective verifiable presentation. 
-
-In case the OP returns multiple verifiable presentations in a `vp_token`, the `vp_token` MUST contain a JSON array, where every element is a verifiable presentation. 
-
-Here is an example of such a `vp_token`:  
-
-<{{examples/response/vp_token_multiple_vps.json}}
-
-And here is the respective `id_token`:
-
-<{{examples/response/id_token_ref_vp_token_multple_vps.json}}
-
-Note: Authentication event information is conveyed via the id token while it's up to the RP to determine what (additional) claims are allocated to `id_token` and `vp_token`, respectively, via the `claims` parameter.  
-
-# verifiable_presentations {#verifiable_presentations}
-
-The claim `verifiable_presentations` is defined as follows:
-
-- `verifiable_presentations`:  A claim whose value is an array of verifiable presentations.
-
-This claim can be added to ID Tokens, Userinfo responses as well as Access Tokens and Introspection response. It MAY also be included as aggregated or distributed claims (see Section 5.6.2 of the OpenID Connect specification [OpenID]).
-
-Note that above claim has to be distinguished from `vp` or `vc` claims as defined in [JWT proof format](https://www.w3.org/TR/vc-data-model/#json-web-token). `vp` or `vc` claims contain those parts of the standard verifiable credentials and verifiable presentations where no explicit encoding rules for JWT exist. They are used as part of a verifiable credential or presentation in JWT format. They are not meant to include complete verifiable credentials or verifiable presentations objects which is the purpose of the claims defined in this specification.
-
-## Request
-
-Verifiable Presentations are requested by embedding a `verifiable_presentations` element containing a `presentation_definition` following the profile defined in (#vp_token) to the `id_token` (or `userinfo`) top level element of the `claims` parameter. 
-
-Here is a non-normative example: 
-
-<{{examples/request/id_token_type_only.json}}
-
-## Response
-
-In response to a request es specfied above, the OP MUST add all matching verifiable presentations to the `verifiable_presentations` claims in the artifact as request (ID token or Userinfo response). 
-
-Additional metadata about the verifiable presentations is provided in an additional `presentation_submission` element as defined in [@!DIF.PresentationExchange] in the same artifact. This `presentation_submission` element links the input descriptor identifiers as specified in the corresponding request to the respective verifiable presentations within the `verifiable_presentations` along with format information as shown in the following example:
-
-<{{examples/response/id_token_jwt_vp.json}}
-
-The root of the path expressions in the descriptor map is the respective JSON documemnt, such as ID token or Userinfo response. 
-
-# Metadata {#metadata}
-
-This specification introduces additional metadata to enable RP and OP to determine the verifiable presentation formats, proof types and algorithms to be used in a protocol exchange. 
-
-## RP Metadata
-
-This specification defines new client metadata parameters according to [@!OpenID.Registration].
-
-RPs indicate the suported formats using the new parameter `vp_formats`.
-
-* `vp_formats`: an object defining the formats, proof types and algorithms a RP supports. The is based on the definition of the `format` elememt in a `presentation_definition` as defined in [@!DIF.PresentationExchange] with the supported formats `jwt_vp` and `ldp_vp`.
-
-Here is an example for a RP registering with a Standard OP via dynamic client registration:
-
-<{{examples/client_metadata/client_code_format.json}}
-
-Here is an example for a RP registering with a SIOP (see [@SIOPv2]) with the `registration` request parameter:
-
-<{{examples/client_metadata/client_siop_format.json}}
-
-## OP Metadata
-
-This specification defines new server metadata parameters according to [@!OpenID-Discovery].
-
-The OP publishes the formats it supports using the `vp_formats` metadata parameter as defined above in its "openid-configuration". 
-
-# Security Considerations {#security_considerations}
-
-To prevent replay attacks, verifiable presentation container objects MUST be linked to `client_id` and if provided `nonce` from the Authentication Request. The `client_id` is used 
-to detect presentation of credentials to a different than the intended party. The `nonce` value binds the presentation to a certain authentication transaction and allows
-the verifier to detect injection of a presentation in the OpenID Connect flow, which is especially important in flows where the presentation is passed through the front channel. 
-
-The values are passed through unmodified from the Authentication Request to the verifiable presentations. 
-
-Note: These values MAY be represented in different ways (directly as claims or indirectly be incoporation in proof calculation) according to the selected proof format denated by the format claim in the verifiable presentation container.
-
-Here is a non-normative example for format=`jwt_vp` (only relevant part):
-
-```json
-{
-  "iss": "did:example:ebfeb1f712ebc6f1c276e12ec21",
-  "jti": "urn:uuid:3978344f-8596-4c3a-a978-8fcaba3903c5",
-  "aud": "s6BhdRkqt3",
-  "nonce": "343s$FSFDa-",
-  "nbf": 1541493724,
-  "iat": 1541493724,
-  "exp": 1573029723,
-  "vp": {
-    "@context": [
-      "<https://www.w3.org/2018/credentials/v1",>
-      "<https://www.w3.org/2018/credentials/examples/v1">
-    ],
-    "type": ["VerifiablePresentation"],
-
-    "verifiableCredential": [""]
-  }
-}
-```
-
-In the example above, `nonce` is included as the `nonce` and `client_id` as the `aud` value in the proof of the verifiable presentation.
-
-Here is a non-normative example for format=`ldp_vp` (only relevant part):
-
-```json
-{
-  "@context": [ ... ],
-  "type": "VerifiablePresentation",
-  "verifiableCredential": [ ... ],
-  "proof": {
-    "type": "RsaSignature2018",
-    "created": "2018-09-14T21:19:10Z",
-    "proofPurpose": "authentication",
-    "verificationMethod": "did:example:ebfeb1f712ebc6f1c276e12ec21#keys-1",    
-    "challenge": "343s$FSFDa-",
-    "domain": "s6BhdRkqt3",
-    "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..kTCYt5
-      XsITJX1CxPCT8yAV-TVIw5WEuts01mq-pQy7UJiN5mgREEMGlv50aqzpqh4Qq_PbChOMqs
-      LfRoPsnsgxD-WUcX16dUOqV0G_zS245-kronKb78cPktb3rk-BuQy72IFLN25DYuNzVBAh
-      4vGHSrQyHUGlcTwLtjPAnKb78"
-  }
-}
-```
-
-In the example above, `nonce` is included as the `challenge` and `client_id` as the `domain` value in the proof of the verifiable presentation.
-
-#  Examples 
-
-This section illustrates examples when W3C Verifiable Credentials objects are requested using `claims` parameter and returned inside ID Tokens.
-
-## Self-Issued OpenID Provider with Verifiable Presentation in ID Token 
-
-Below are the examples when W3C Verifiable Credentials are requested and returned inside ID Token as part of Self-Issued OP response. ID Token contains a `verifiable_presentations` claim with the Verifiable Presentation data. It can also contain `verifiable_credentials` element with the Verifiable Credential data. 
-
-### Authentication request
-
-The following is a non-normative example of how an RP would use the `claims` parameter to request the `verifiable_presentations` claim in the `id_token`:
-
-```
-  HTTP/1.1 302 Found
-  Location: openid://?
-    response_type=id_token
-    &client_id=https%3A%2F%2Fbook.itsourweb.org%33000%2Fohip
-    &redirect_uri=https%3A%2F%2Fbook.itsourweb.org%33000%2Fohip
-    &scope=openid
-    &claims=...
-    &nonce=960848874
-    &registration_uri=https%3A%2F%2F
-      client.example.org%2Frf.txt%22%7D
-      
-```
-#### `claims` parameter 
-
-Below is a non-normative example of how the `claims` parameter can be used for requesting verified presentations containg a credential of a certain type.
-
-<{{examples/request/id_token_health.json}}
-
-### Authentication Response 
-
-Below is a non-normative example of ID Token that includes a `verifiable_presentations` claim.
-Note: the RP was setup with the preferred format `jwt_vp`.
-
-<{{examples/response/id_token_jwt_vp.json}}
-
-Below is a non-normative example of a decoded Verifiable Presentation object that was included in `verifiable_presentations` in `jwt_vp` format (see [@VC_DATA]).
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `nonce` claim is set to the value of the `nonce` request parameter value and the `aud` claim contains the RP's `client_id`.
-
-<{{examples/response/jwt_vp.json}}
-
-## Self-Issued OpenID Provider with Verifiable Presentation in ID Token (selective disclosure)
-### `claims` parameter 
-
-Below is a non-normative example of how the `claims` parameter can be used for requesting verified presentations with selective disclosure.
-Note: the RP was setup with the preferred format `ldp_vp`.
-
-<{{examples/request/id_token_type_and_claims.json}}
-
-### Authentication Response 
-
-Below is a non-normative example of an ID Token that includes a `verifiable_presentations` claim containing a verifiable presentation in LD Proof format.
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `challenge` claim is set to the value of the `nonce` request parameter value and the `domain` claim contains the RP's `client_id`.
-
-<{{examples/response/id_token_ldp_vp.json}}
-
-## Authorization Code Flow with Verifiable Presentation in ID Token
-
-Below are the examples when W3C Verifiable Credentials are requested and returned inside ID Token as part of Authorization Code flow. ID Token contains a `verifiable_presentations` element with the Verifiable Presentations data. 
-
-### Authentication Request
-
-```
-  GET /authorize?
-    response_type=code
-    &client_id=s6BhdRkqt3 
-    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-    &scope=openid
-    &claims=...
-    &state=af0ifjsldkj
-    &nonce=n-0S6_WzA2Mj HTTP/1.1
-  Host: server.example.com
-```
-#### Claims parameter 
-
-Below is a non-normative example of how the `claims` parameter can be used for requesting a verified presentations in an ID Token.
-
-<{{examples/request/id_token_type_only.json}}
-
-### Authentication Response
-
-```
-HTTP/1.1 302 Found
-  Location: https://client.example.org/cb?
-    code=SplxlOBeZQQYbYS6WxSbIA
-    &state=af0ifjsldkj
-```
-
-### Token Request
-
-```
-  POST /token HTTP/1.1
-  Host: server.example.com
-  Content-Type: application/x-www-form-urlencoded
-  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-
-  grant_type=authorization_code
-  &code=SplxlOBeZQQYbYS6WxSbIA
-  &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-```
-
-### Token Response 
-
-```json
-{
-   "access_token":"SlAV32hkKG",
-   "token_type":"Bearer",
-   "refresh_token":"8xLOxBtZp8",
-   "expires_in":3600,
-   "id_token":"eyJ0 ... NiJ9.eyJ1c ... I6IjIifX0.DeWt4Qu ... ZXso"
-```
-
-#### id_token (containing verifiable presentation)
-
-This is the example ID Token containing a `verifiable_presentations` element containg a verifiable presentation (and credential) in LD Proof format. 
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `challenge` claim is set to the value of the `nonce` request parameter value and the `domain` claim contains the RP's `client_id`. 
-
-<{{examples/response/id_token_ldp_vp.json}} 
-
-## Authorization Code Flow with Verifiable Presentation returned from the UserInfo endpoint
-
-Below are the examples when verifiable presentation is requested and returned from the UserInfo endpoint as part of OpenID Connect Authorization Code Flow. UserInfo response contains a `verifiable_presentations` element with the Verifiable Presentation data. 
-
-### Authentication Request
-
-```
-  GET /authorize?
-    response_type=code
-    &client_id=s6BhdRkqt3 
-    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-    &scope=openid
-    &claims=...
-    &state=af0ifjsldkj
-    &nonce=n-0S6_WzA2Mj HTTP/1.1
-  Host: server.example.com
-```
-
-#### Claims parameter 
-
-Below is a non-normative example of how the `claims` parameter can be used for requesting verified presentations in a userinfo response.
-
-<{{examples/request/userinfo_health.json}}
-
-### Authentication Response
-
-```
-HTTP/1.1 302 Found
-  Location: https://client.example.org/cb?
-    code=SplxlOBeZQQYbYS6WxSbIA
-    &state=af0ifjsldkj
-```
-
-### Token Request
-
-```
-  POST /token HTTP/1.1
-  Host: server.example.com
-  Content-Type: application/x-www-form-urlencoded
-  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-
-  grant_type=authorization_code
-  &code=SplxlOBeZQQYbYS6WxSbIA
-  &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-```
-
-### Token Response
-
-#### id_token
-
-```json
-{
-  "iss": "http://server.example.com",
-  "sub": "248289761001",
-  "aud": "s6BhdRkqt3",
-  "nonce": "n-0S6_WzA2Mj",
-  "exp": 1311281970,
-  "iat": 1311280970,
-  "auth_time": 1615910535
-}
-```
-
-### UserInfo Response 
-
-Below is a non-normative example of a UserInfo Response that includes a `verifiable_presentations` claim:
-
-```json
-  HTTP/1.1 200 OK
-  Content-Type: application/json
-
-  {
-    "sub": "248289761001",
-    "name": "Jane Doe",
-    "given_name": "Jane",
-    "family_name": "Doe",
-    "presentation_submission": {
-        "id": "health credential",
-        "definition_id": "health credential",
-        "descriptor_map": [
-            {
-                "id": "Ontario Health Insurance Plan",
-                "format": "jwt_vp",
-                "path": "$.verifiable_presentations[0].presentation",
-                "path_nested": {
-                    "format": "jwt_vc",
-                    "path": "$.verifiableCredential[0]"
-                }
-            }
-        ]
-    },
-    "verifiable_presentations":[
-      {
-         "format":"jwt_vp",
-         "presentation":"ewogICAgImlzcyI6Imh0dHBzOi8vYm9vay5pdHNvdXJ3ZWIub...IH0="
-      }
-   ],   
-  }
-```
-
-#### Verifiable Presentation
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `nonce` claim is set to the value of the `nonce` request parameter value and the `aud` claim contains the RP's `client_id`. 
-
-```json
-  {
-    "iss":"http://server.example.com",
-    "aud":"s6BhdRkqt3",
-    "iat":1615910538,
-    "exp":1615911138,   
-    "nbf":1615910538,
-    "nonce":"n-0S6_WzA2Mj",
-    "vp":{
-        "@context":[
-          "https://www.w3.org/2018/credentials/v1",
-          "https://ohip.ontario.ca/v1"
-        ],
-        "type":[
-          "VerifiablePresentation"
-        ],
-        "verifiableCredential":[
-          "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6InVybjp1dWlkOjU0ZDk2NjE2LTE1MWUt...OLryT1g"    
-        ]
-    }   
-  }
-```
-
-## Authorization Code Flow with Verifiable Presentation returned from the UserInfo endpoint (LDP)
-### Claims parameter 
-
-Below is a non-normative example of how the `claims` parameter can be used for requesting verified presentations signed as Linked Data Proofs.
-
-<{{examples/request/userinfo_type_and_claims.json}}
-
-### Token Response
-
-#### id_token
-
-```json
-{
-  "iss": "http://server.example.com",
-  "sub": "248289761001",
-  "aud": "s6BhdRkqt3",
-  "nonce": "n-0S6_WzA2Mj",
-  "exp": 1311281970,
-  "iat": 1311280970,
-  "auth_time": 1615910535
-}
-```
-
-### UserInfo Response 
-
-Below is a non-normative example of a UserInfo Response that includes `verifiable_presentations` claim.
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `challenge` claim is set to the value of the `nonce` request parameter value and the `domain` claim contains the RP's `client_id`. 
-
-<{{examples/response/userinfo_with_ldp_vp.json}}
-
-## SIOP with vp_token
-This section illustrates the protocol flow for the case of communication through the front channel only (like in SIOP).
-
-### Authentication request
-
-The following is a non-normative example of how an RP would use the `claims` parameter to request claims in the `vp_token`:
-
-```
-  HTTP/1.1 302 Found
-  Location: openid://?
-    response_type=id_token
-    &client_id=https%3A%2F%2Fclient.example.org%2Fcb
-    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-    &scope=openid
-    &claims=...
-    &state=af0ifjsldkj
-    &nonce=n-0S6_WzA2Mj
-    &registration_uri=https%3A%2F%2F
-      client.example.org%2Frf.txt%22%7D
-      
-```
-
-#### claims parameter
-
-<{{examples/request/vp_token_type_and_claims.json}}
-
-### Authentication Response (including vp_token)
-
-The successful authentication response contains a `vp_token` parameter along with  `id_token` and `state`.
-```
-  HTTP/1.1 302 Found
-  Location: https://client.example.org/cb#
-    id_token=eyJ0 ... NiJ9.eyJ1c ... I6IjIifX0.DeWt4Qu ... ZXso
-    &vp_token=...
-    &state=af0ifjsldkj
-      
-```
-
-#### id_token
-
-This is the example ID Token:
-
-```json
-{
-   "iss":"https://self-issued.me/v2",
-   "aud":"https://client.example.org/cb",
-   "iat":1615910538,
-   "exp":1615911138,
-   "sub":"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs",
-   "auth_time":1615910535,
-   "nonce":"n-0S6_WzA2Mj",
-   "sub_jwk": {
-     "kty":"RSA",
-     "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx
-     4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMs
-     tn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2
-     QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbI
-     SD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqb
-     w0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
-     "e":"AQAB"
-    }
-    "_vp_token_": {
-        "presentation_submission": {
-            "id": "Selective disclosure example presentation",
-            "definition_id": "Selective disclosure example",
-            "descriptor_map": [
-                {
-                    "id": "ID Card with constraints",
-                    "format": "ldp_vp",
-                    "path": "$",
-                    "path_nested": {
-                        "format": "ldp_vc",
-                        "path": "$.verifiableCredential[0]"
-                    }
-                }
-            ]
-        }
-    }
-}
-```
-
-#### vp_token content
-
-This is the example `vp_token` containg a verifiable presentation (and credential) in LD Proof format. 
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `challenge` claim is set to the value of the `nonce` request parameter value and the `domain` claim contains the RP's `client_id`. 
-
-<{{examples/response/vp_token_ldp_vp.json}}
-
-## Authorization Code Flow with vp_token
-
-This section illustrates the protocol flow for the case of communication using frontchannel and backchannel (utilizing the authorization code flow).
-
-### Authentication Request
-
-```
-  GET /authorize?
-    response_type=code
-    &client_id=s6BhdRkqt3 
-    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-    &scope=openid
-    &claims=...
-    &state=af0ifjsldkj
-    &nonce=n-0S6_WzA2Mj HTTP/1.1
-  Host: server.example.com
-```
-
-#### Claims parameter
-
-<{{examples/request/vp_token_type_and_claims.json}}
-
-### Authentication Response
-```
-HTTP/1.1 302 Found
-  Location: https://client.example.org/cb?
-    code=SplxlOBeZQQYbYS6WxSbIA
-    &state=af0ifjsldkj
-```
-
-### Token Request
-```
-  POST /token HTTP/1.1
-  Host: server.example.com
-  Content-Type: application/x-www-form-urlencoded
-  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-
-  grant_type=authorization_code
-  &code=SplxlOBeZQQYbYS6WxSbIA
-  &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
-```
-
-### Token Response (including vp_token)
-
-This is the example token response containing a `vp_token` containg a verifiable presentation (and credential) in LD Proof format. 
-
-Note: in accordance with (#security_considerations) the verifiable presentation's `challenge` claim is set to the value of the `nonce` request parameter value and the `domain` claim contains the RP's `client_id`. 
-
-<{{examples/response/token_response_vp_token_ldp_vp.json}}
-
-#### id_token
-
-<{{examples/response/id_token_ref_vp_token_code.json}}
+This specification defines mechanisms to allow credential holders (acting as OpenID Connec RPs) to request and credential issuers (acting as OpenID Connect OPs) to issue Verifiable Credentials via OpenID Connect. 
+
+The following figure shows the overall flow. 
+
+!---
+~~~ ascii-art
++--------------+   +-----------+                                         +-------------+
+| User         |   |   Wallet  |                                         |   Issuer    |
++--------------+   +-----------+                                         +-------------+
+        |                |                                                      |
+        |                |                                                      |
+        |    interacts   |                                                      |
+        |--------------->|  (1) prepare_presentation                            |
+        |                |----------------------------------------------------->|
+        |                |      p_nonce                                         |
+        |                |<-----------------------------------------------------|
+        |                |                                                      |
+        |                |  (2) authorize (claims, (opt) presentations, ...)    |
+        |                |----------------------------------------------------->|
+        |                |                                                      |
+    (3) User Login & Consent                                                    |
+        |                |                                                      |
+        |                |  (4) authorize response (code)                       |
+        |                |<-----------------------------------------------------|
+        |                |                                                      |
+        |                |  (5) token (code, ...)                               |
+        |                |----------------------------------------------------->| 
+        |                |      access_token, id_token                          |
+        |                |<-----------------------------------------------------|    
+        |                |                                                      |
+        |                |  (6) credentials (access_token, claims, proofs, ...) |
+        |                |----------------------------------------------------->| 
+        |                |      credentials OR acceptance_token                 |
+        |                |<-----------------------------------------------------|   
+        |                |                                                      |
+        |                |  (7) poll_credentials (acceptance_token)             |
+        |                |----------------------------------------------------->| 
+        |                |      credentials OR not_ready_yet                    |
+        |                |<-----------------------------------------------------|          
+~~~
+!---
+Figure: Overall Credential Issuance Flow
+
+This flow is based on OpenID Connect and the code grant type. Use with other grant types, such as CIBA, 
+will be possible as well. 
+
+Starting point is an interaction of the user with her wallet. The user might, for example, 
+
+* want to present a credential and found out there is no suitable credential present in her wallet or
+* have visited the web site of a Credential Issuer and wants to obtain a credential from that issuer. 
+
+It is assumed that the wallet has already obtained knowledge about what credentials this particular 
+Credential Issuer offers and whether this issuer expects the holder to present existing credentials
+as part of the issuance flow. 
+
+(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet 
+contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer
+that will be used to protect those presentations from being replayed. 
+
+(2) In this step, the wallet sends an authorization request to the issuer. This request determines
+the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
+include verifiable presentations if required by the issuer. 
+Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization
+request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
+request. 
+
+(3) The issuer takes over user interface control and interacts with the user. It will authenticate the
+user and ask for her consent to issue the requested credentials. The implementation of this step is at
+the discretion of the issuer and out of scope of this specification. The issuer might, for example, 
+use a local or federated login for that purpose. It might also utilize verifiable presentations passed 
+in the authorization request or call back to the user's wallet to dynamically obtain verifiable presentations.
+
+(4) The issuer responds with an authorization code to the wallet. 
+
+(5) The wallet exchanges the authorization code for an Access Token and an ID Token.
+
+(6) This Access Token is used to request the issuance of the actual credentials. The credential 
+request determines the types of credentials the wallet wants to obtain along with the key material 
+the respective credential shall be bound to. If required by the issuer, the wallet also passes 
+a proof of posession for the key material. This proof of posession uses the SHA256 hash of the 
+Access Token as cryptographic nonce. This ensure replay protection of the proofs. 
+
+The Issuer will either directly respond with the credentials or issue an Acceptance Token, which 
+is used by the wallet to poll for completion of the issuance process. 
+
+(7) (OPTIONAL) The wallet polls the issuer to obtain the credentials previously requested in 
+step (6). The issuer either responds with the credentials or HTTP status code "202" indicating 
+that the issuance is not completed yet. 
+
+Note: if the issuer just wants to offer the user to retrieve an pre-existing credential, it can
+encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
+with step (6). One option would be to encode the data into a QR Code.  
 
 {backmatter}
 
@@ -818,7 +328,7 @@ TBD
 
 # Acknowledgements {#Acknowledgements}
 
-TBD
+We would like to thank John Bradley, David Waite, and Alen Horvat for their valuable feedback and contributions that helped to evolve this specification.
 
 # Notices
 
@@ -831,30 +341,6 @@ The technology described in this specification was made available from contribut
 # Document History
 
    [[ To be removed from the final specification ]]
-
-   -05
-
-   * moved presentation submission elements outside of verifiable presentations (ID Token or Userinfo)
-
-   -04
-
-   * added presentation submission support
-   * cleaned up examples to use `nonce` & `client_id` instead of `vp_hash` for replay detection
-   * fixed further nits in examples
-   * added and reworked references to other specifications
-
-   -03
-
-   * aligned with SIOP v2 spec
-
-   -02
-
-   * added `presentation_definition` as sub element of `verifiable_presentation` and `vp_token`
-
-   -01
-
-   * adopted DIF Presentation Exchange request syntax
-   * added security considerations regarding replay detection for verifiable credentials
 
    -00 
 

@@ -1,0 +1,58 @@
+@startuml
+
+actor User as U
+participant Wallet as W
+box Issuer
+participant "Setup" as Setup
+participant "PAR" as PAR
+participant "Authentication" as AS
+participant "Token" as T
+participant "Credentials API" as P
+participant "Poll Credentials API" as I
+end box
+autoactivate on
+hide footbox
+
+U -> W: interact
+note over W: Wallet discovers input material\nrequired to request issuance\nof a certain credential (Optional)
+
+alt no presentations required in authorization request
+W -> AS: authorize (credential type in claims parameter)
+
+else presentations required in authorization request
+W -> Setup: that's what I want (credential types)
+return (opt)list of required credentials, presentation_nonce
+
+W -> W: prepare presentations (bound to presentation_nonce)
+deactivate W
+
+W -> PAR: (credential type in claims parameter and presentations))
+return request_uri
+
+W -> AS: authorize (client_id, request_uri)
+end
+
+note over AS: Issuer will authenticate user or utilize credentials or assertions to identify user. \noptions: local login, callback to wallet (shown below), federated login (via OpenID or SAML), ...
+
+opt Request credentials as prerequsite for issuance
+AS -> W: request for presentation (OIDC4VPs)
+return: presentations
+end opt
+
+return code
+
+W -> T: code
+return access_token
+
+W->P: request issuance by presenting bindable proof (access token has is challenge)
+
+note over P: access token hash is used as challenge
+
+return credential or acceptance token issued
+opt Token not yet issued
+
+W->I: credential request with accptance token
+return credential
+end opt
+
+@enduml
