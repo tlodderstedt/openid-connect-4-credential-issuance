@@ -171,15 +171,12 @@ It is assumed that the wallet has already obtained knowledge about what credenti
 Credential Issuer offers and whether this issuer expects the holder to present existing credentials
 as part of the issuance flow. 
 
-(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet 
-contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer
-that will be used to protect those presentations from being replayed. 
+(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
 
 (2) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
-Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization
-request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
+Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
 request. 
 
 (3) The issuer takes over user interface control and interacts with the user. It will authenticate the
@@ -192,11 +189,7 @@ in the authorization request or call back to the user's wallet to dynamically ob
 
 (5) The wallet exchanges the authorization code for an Access Token and an ID Token.
 
-(6) This Access Token is used to request the issuance of the actual credentials. The credential 
-request determines the types of credentials the wallet wants to obtain along with the key material 
-the respective credential shall be bound to. If required by the issuer, the wallet also passes 
-a proof of posession for the key material. This proof of posession uses the SHA256 hash of the 
-Access Token as cryptographic nonce. This ensure replay protection of the proofs. 
+(6) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymorphic manner depending on the credential type being requested. 
 
 The Issuer will either directly respond with the credentials or issue an Acceptance Token, which 
 is used by the wallet to poll for completion of the issuance process. 
