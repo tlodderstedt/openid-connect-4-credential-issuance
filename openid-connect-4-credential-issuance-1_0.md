@@ -88,8 +88,6 @@ The user wants to obtain a digital criminal record certificate. She starts the j
 
 This section describes the requirements this specification aims to fulfill beyond the use cases described above. 
 
-## Flow types
-
 * Proof of possession of key material
   * Support all kinds of proofs (e.g. signatures, blinded proofs) but also issuance w/o proof
   * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8
