@@ -96,7 +96,7 @@ This section describes the requirements this specification aims to fulfill beyon
   * credentials containing different claims for the same user (micro/mono credentials) bound to the same key material
   * batch issuance of multiple credentials of the same type bound to different key material (see mDL)
 * It shall be possible to issue multiple credentials based on same consent (e.g. different formats and/or keys - did:key followed by did:ebsi) 
-* Support for asynchronous issuance of crredentials
+* Support for deferred issuance of credentials
 * User authentication and identification
   * Issuer shall be able dynamically obtain further data and be able to authenticate the user at their discretion
   * Holder shall be able to pass existing credentials (as presentations) or identity assertions to the issuance flow
