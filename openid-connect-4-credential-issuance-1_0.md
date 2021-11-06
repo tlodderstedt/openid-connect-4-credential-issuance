@@ -30,7 +30,7 @@ organization="Microsoft"
 
 .# Abstract
 
-This specification defines an extension of OpenID Connect to allow holders to request issuance of verifiable credentials.
+This specification defines an extension of OpenID Connect to allow holders to request issuance of verifiable credentials in addition to the standard OpenID Connect assertions.
 
 {mainmatter}
 
@@ -90,13 +90,13 @@ The user wants to obtain a digital criminal record certificate. She starts the j
 
 # Requirements
 
-This section describes the requirements this specification aims to fulfill to realize the use cases described above. 
+This section describes the requirements this specification aims to fulfill the use cases described above. 
 
 ## Flow types
 
 * Proof of possession of key material
   * Support all kinds of proofs (e.g. signatures, blinded proofs) but also issuance w/o proof
-  * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8
+  * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8    
   * The proof mechanisms shall be complementary to OAuth/OIDC mechanisms for request signatures, client authentication, and PoP in order to allow for its parallel usage.  
 * It shall be possible to request a single credential as well to request multiple credentials in the same request. Examples of the latter include: 
   * credentials containing different claims for the same user (micro/mono credentials) bound to the same key material
