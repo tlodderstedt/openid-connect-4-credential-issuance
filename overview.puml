@@ -15,7 +15,7 @@ hide footbox
 
 U -> W: interact
 note over W: Wallet discovers manifest listing\nrequirements to receive\nof a certain credential (Optional)
-note over W: Wallet preobtains credentials necessary for as the input to receive certain credentials (Optional)
+note over W: Wallet preobtains credentials necessary\nas the input to receive certain credentials (Optional)
 
 alt no presentations required in authorization request
 W -> AS: authorization request with desired credential type in the claims parameter
