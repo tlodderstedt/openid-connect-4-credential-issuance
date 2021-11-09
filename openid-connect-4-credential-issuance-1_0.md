@@ -30,25 +30,25 @@ organization="Microsoft"
 
 .# Abstract
 
-This specification defines an extension of OpenID Connect to allow holders to request issuance and issuers of verifiable credentials issuance of verifiable credentials.
+This specification defines an extension of OpenID Connect to allow holders to request issuance of verifiable credentials in addition to the standard OpenID Connect assertions.
 
 {mainmatter}
 
 # Introduction
 
-This specification extends OpenID Connect with support for issuance of verifiable credentials, e.g. in the form of W3C Verifiable Credentials. This allows existing OpenID Connect OPs to extends their service and become credential issuer. It also allows new applications built using Verifiable Credentials to utilize OpenID Connect as integration and interoperability layer between credential holders and issuers. 
+This specification extends OpenID Connect with support for issuance of verifiable credentials, e.g. in the form of W3C Verifiable Credentials. This allows existing OpenID Connect OPs to extends their service and become credential issuers. It also allows new applications built using Verifiable Credentials to utilize OpenID Connect as integration and interoperability layer between credential holders and issuers. 
 
-OpenID Connect is an obvious choice for this use case since it already allows Relying Parties to request identity assertions. Verifiable Credentials are very similar in that they allow an Issuer to assert End-User claims. In contrast to identity assertions, a verifiable credential follows a pre-defined schema (the credential type) and is bound to key material allowing the holder to proof the legitimate possession of the credential. This allows presentation of the credential without direct involvment of the credential issuer. This specification caters for those differences. 
+OpenID Connect is an obvious choice for this use case since it already allows Relying Parties to request identity assertions. Verifiable Credentials are very similar in that they allow an Issuer to assert End-User claims. In contrast to the identity assertions, a verifiable credential follows a pre-defined schema (the credential type) and is bound to a key material allowing the holder to prove the legitimate possession of the credential. This allows direct presentation of the credential without involvment of the credential issuer. This specification caters for those differences. 
 
 # Terminology
 
 Credential
 
-A set of one or more claims made by an issuer. (see [@VC_DATA])
+A set of one or more claims made by an issuer. (see [@VC_DATA]) Note that this definition differs from that in [OpenID].
 
 Verifiable Credential (VC)
 
-A verifiable credential is a tamper-evident credential that has authorship that can be cryptographically verified. Verifiable credentials can be used to build verifiable presentations, which can also be cryptographically verified. The claims in a credential can be about different subjects. (see [@VC_DATA])
+A verifiable credential is a tamper-evident credential that has authorship that can be cryptographically verified. Verifiable credentials can be used to build verifiable presentations, which can also be cryptographically verified. (see [@VC_DATA])
 
 Presentation
 
@@ -70,17 +70,21 @@ A user comes across an app where she needs to present a credential, e.g. a bank 
 
 ## Holder initiated credential issuance (with pre-requisites)
 
-A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that purpose. The user confirms and is sent to the issuer's user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet.
+A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that purpose. The user confirms and is sent to the issuer's user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet. 
 
 ## Issuer initiated credential issuance
 
-The user browses her university's home page, searching for a way to obtain a digital diploma. She finds the respective page, which shows a link "request your digital diploma". She clicks on this link and is being sent to her digital wallet. The wallet notfies her that an issuer offered to issue a diploma credential. She confirms this inquiry and is being sent to the university's credential issuance service. She logs in with her university login and is being asked to consent to the creation of a digital diploma. She confirms and is sent back to her wallet. There she is notified of the sucessful creation of the digital diploma.  
+The user browses her university's home page, searching for a way to obtain a digital diploma. She finds the respective page, which shows a link "request your digital diploma". She clicks on this link and is being sent to her digital wallet. The wallet notifies her that an issuer offered to issue a diploma credential. She confirms this inquiry and is being sent to the university's credential issuance service. She logs in with her university login and is being asked to consent to the creation of a digital diploma. She confirms and is sent back to her wallet. There she is notified of the sucessful creation of the digital diploma.  
 
 ## Issuer initiated credential issuance (cross device/ credential retrival only)
 
 The user visits the administration office of her university in order to obtain a digital diploma. The university staff checks her student card and looks up her university diploma in the universitie's IT system. The office staff then starts the issuance process. The user is asked to scan a QR Code in order to retrieve the digital diploma. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the offer to create a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
 
-## Deferred Credential Issuance
+## Issuer initiated credential issuance (with pre-requisites)
+
+The user navigates to her university's webpage to obtain a digital diploma where she is asked to scan a QR Code to start the retrieval process. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the pre-requisit to present her digital student card already stored in the wallet in order to receive a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
+
+## Deferred Credential Issuance (Asynchronous Credential Issuance?)
 
 The user wants to obtain a digital criminal record certificate. She starts the journey in her wallet and is sent to the issuer service of the responsible government authority. She logs in with her eID and requests the issuance of the certificate. She is being notified that the issuance of the certificate will take a couple of days due to necessary background checks by the authority. She confirms and is sent back to the wallet. The wallet shows a hint in the credential list indicating that issuance of the digital criminal record certificate is under way. A few days later, she receives an e-Mail from the authority that the certificate was sucessfully issued. She visits her wallet, where she is asked after startup whether she wants to download the certificate. She confirms and the new credential is retrieved and stored in her wallet. 
 
@@ -90,15 +94,15 @@ This section describes the requirements this specification aims to fulfill beyon
 
 * Proof of possession of key material
   * Support all kinds of proofs (e.g. signatures, blinded proofs) but also issuance w/o proof
-  * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8
+  * Proofs must be protected against replay by using issuer provided nonce (see also https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-8    
   * The proof mechanisms shall be complementary to OAuth/OIDC mechanisms for request signatures, client authentication, and PoP in order to allow for its parallel usage.  
 * It shall be possible to request a single credential as well to request multiple credentials in the same request. Examples of the latter include: 
   * credentials containing different claims for the same user (micro/mono credentials) bound to the same key material
   * batch issuance of multiple credentials of the same type bound to different key material (see mDL)
 * It shall be possible to issue multiple credentials based on same consent (e.g. different formats and/or keys - did:key followed by did:ebsi) 
-* Support for asynchronous issuance of crredentials
+* Support for asynchronous issuance of credentials
 * User authentication and identification
-  * Issuer shall be able dynamically obtain further data and be able to authenticate the user at their discretion
+  * Issuer shall be able to dynamically obtain further data and be able to authenticate the user at their discretion
   * Holder shall be able to pass existing credentials (as presentations) or identity assertions to the issuance flow
     * Assisted flow (utilizing credential manifest)
     * Presentations/assertions must be protected against replay
@@ -111,7 +115,7 @@ This section describes the requirements this specification aims to fulfill beyon
 
 # Overview 
 
-This specification defines mechanisms to allow credential holders (acting as OpenID Connec RPs) to request and credential issuers (acting as OpenID Connect OPs) to issue Verifiable Credentials via OpenID Connect. 
+This specification defines mechanisms to allow credential holders (acting as OpenID Connec RPs) to request credential issuers (acting as OpenID Connect OPs) to issue Verifiable Credentials via OpenID Connect. 
 
 The following figure shows the overall flow. 
 
@@ -154,8 +158,7 @@ The following figure shows the overall flow.
 !---
 Figure: Overall Credential Issuance Flow
 
-This flow is based on OpenID Connect and the code grant type. Use with other grant types, such as CIBA, 
-will be possible as well. 
+This flow is based on OpenID Connect and the code grant type. Use with other grant types, such as CIBA, will be possible as well. 
 
 Starting point is an interaction of the user with her wallet. The user might, for example, 
 
@@ -166,15 +169,12 @@ It is assumed that the wallet has already obtained knowledge about what credenti
 Credential Issuer offers and whether this issuer expects the holder to present existing credentials
 as part of the issuance flow. 
 
-(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet 
-contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer
-that will be used to protect those presentations from being replayed. 
+(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
 
 (2) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
-Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization
-request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
+Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
 request. 
 
 (3) The issuer takes over user interface control and interacts with the user. It will authenticate the
@@ -187,11 +187,7 @@ in the authorization request or call back to the user's wallet to dynamically ob
 
 (5) The wallet exchanges the authorization code for an Access Token and an ID Token.
 
-(6) This Access Token is used to request the issuance of the actual credentials. The credential 
-request determines the types of credentials the wallet wants to obtain along with the key material 
-the respective credential shall be bound to. If required by the issuer, the wallet also passes 
-a proof of posession for the key material. This proof of posession uses the SHA256 hash of the 
-Access Token as cryptographic nonce. This ensure replay protection of the proofs. 
+(6) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymorphic manner depending on the credential type being requested. 
 
 The Issuer will either directly respond with the credentials or issue an Acceptance Token, which 
 is used by the wallet to poll for completion of the issuance process. 
