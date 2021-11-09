@@ -202,6 +202,212 @@ Note: if the issuer just wants to offer the user to retrieve an pre-existing cre
 encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
 with step (6). One option would be to encode the data into a QR Code.  
 
+# Authorization request
+
+## Authorization request without submission of VCs
+
+### Authorization Request
+
+```
+  GET /authorize?
+    response_type=code
+    &client_id=s6BhdRkqt3 
+    &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+    &scope=openid
+    &claims=%7B%22vc_token%...%2dp_vc%22%7D%7D%5D%7D%7D
+    &state=af0ifjsldkj
+```
+
+#### `claims` parameter
+
+```json=
+{
+    "vc_token":{
+        "type": ["uri":"..."],
+        "format": "ldp_vc"
+    }
+}
+```
+
+## Authorization request with submission of VCs
+
+### Credential Challenge Request
+
+```
+  GET /authorize?
+    &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+    &claims=%7B%22vc_token%...%2ldp_vc%22%7D%7D%5D%7D%7D
+    &state=af0ifjsldkj
+    &nonce=n-0S6_WzA2Mj
+```
+//What is the minimum set of parameters for the credential challenge request? Is `client_id` needed?
+
+#### `claims` parameter
+
+```json=
+{
+    "vc_token": {    
+      "credential_application": {
+        "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "manifest_id": "WA-DL-CLASS-A",
+        "submission_id": "a30e3b91-fb77-4d22-95fa-871689c322e2"
+        "format": {
+          "ldp_vc": {
+            "proof_type": [
+              "JsonWebSignature2020",
+              "EcdsaSecp256k1Signature2019"
+            ]
+          }
+        }
+      }
+   }
+}
+```
+//`submission_id` not in the CM spec, yet.
+
+### Credential Challenge Response
+
+```
+HTTP/1.1 302 Found
+  Location: https://wallet.example.org/cb?
+    presentation_nonce=fbe22300-57a6-4f08-ace0-9c5210e16c32
+    &state=af0ifjsldkj
+```
+
+### Authorization Request
+
+```
+  GET /authorize?
+    response_type=code
+    &client_id=s6BhdRkqt3 
+    &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+    &scope=openid
+    &claims=%7B%22vc_token%...%2dp_vc%22%7D%7D%5D%7D%7D
+    &state=af0ifjsldkj
+    &nonce=n-0S6_WzA2Mj
+```
+
+#### `claims` parameter
+
+```json=
+{
+    "vc_token": {    
+      "presentation_submission": {
+        "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
+        "definition_id": "32f54163-7166-48f1-93d8-ff217bdb0653",
+        "descriptor_map": [
+          {
+            "id": "input_1",
+            "format": "jwt_vc",
+            "path": "$.verifiableCredential[0]"
+          }
+        ]
+      }
+    }
+}
+```
+
+# Authorization Response
+
+```
+HTTP/1.1 302 Found
+  Location: https://wallet.example.org/cb?
+    code=SplxlOBeZQQYbYS6WxSbIA
+    &state=af0ifjsldkj
+```
+
+# Token Request
+
+```
+POST /token HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  grant_type=authorization_code
+  &code=SplxlOBeZQQYbYS6WxSbIA
+  &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+  
+```
+
+# Token Response
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz",
+  }
+```
+// Can Refresh Token be included?
+
+# Credential Request
+```
+POST /credential HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  proof=%7B%22type%22:%22...-ace0-9c5210e16c32%22%7D
+```
+
+#### `proof` parameter
+
+//proof structure depends on the signature type - what should include at minimum? verificationMethod (cryptographically resolvabel identifier), jws (signature) and a_hash (access_token_hash)?
+
+```json
+{
+    "verificationMethod": "did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1",
+    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..l9d0YHjcFAH2H4dB9xlWFZQLUpixVCWJk0eOt4CXQe1NXKWZwmhmn9OQp6YxX0a2LffegtYESTCJEoGVXLqWAA",
+    "a_hash": "2H4dB9xl-FZQL-pixV-WJk0eOt4CXQ-1NXKW"
+}
+```
+
+# Credential Response (synchronous flow)
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "vc_token" : {
+      "credential_fulfillment": {
+        "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
+        "manifest_id": "WA-DL-CLASS-A",
+        "descriptor_map": [
+          {
+            "id": "driving_license_1",
+            "format": "ldp_vc",
+            "path": "$.verifiableCredential[0]"
+          }
+        ]
+      },
+      "verifiableCredential":{...}
+    }
+ }
+```
+
+# Credential Response (deferred flow)
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "acceptance_token": "8xLOxBtZp8"
+ }
+```
+
 {backmatter}
 
 <reference anchor="VC_DATA" target="https://www.w3.org/TR/vc-data-model">
