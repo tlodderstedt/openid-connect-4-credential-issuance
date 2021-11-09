@@ -90,7 +90,7 @@ The user wants to obtain a digital criminal record certificate. She starts the j
 
 # Requirements
 
-This section describes the requirements this specification aims to fulfill the use cases described above. 
+This section describes the requirements this specification aims to fulfill beyond the use cases described above. 
 
 ## Flow types
 
