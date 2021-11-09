@@ -234,8 +234,11 @@ with step (6). One option would be to encode the data into a QR Code.
 ### Credential Challenge Request
 
 ```
-  GET /authorize?
-    &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+  POST /authorize HTTP/1.1
+    Host: server.example.com
+    Content-Type: application/x-www-form-urlencoded
+    
+    redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
     &claims=%7B%22vc_token%...%2ldp_vc%22%7D%7D%5D%7D%7D
     &state=af0ifjsldkj
     &nonce=n-0S6_WzA2Mj
