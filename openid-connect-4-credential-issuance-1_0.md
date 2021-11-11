@@ -62,6 +62,10 @@ W3C Verifiable Credential Objects
 
 Both verifiable credentials and verifiable presentations
 
+Credential Manifests 
+
+A resource format that defines preconditional requirements, Issuer style preferences, and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential. (see [@DIF.CredentialManifest])
+
 # Use Cases
 
 ## Holder initiated credential issuance
@@ -137,7 +141,7 @@ The following figure shows the overall flow.
         |                |      presentation nonce                              |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-        |                |  (3) authorization req (claims, [opt] input, etc. )  |
+        |                |  (3.1) authorization req (claims, [opt] input, etc. )|
         |                |----------------------------------------------------->|
         |                |                                                      |
     (4) User Login & Consent                                                    |
@@ -146,7 +150,7 @@ The following figure shows the overall flow.
         |                |      VCs                                             |
         |                |----------------------------------------------------->| 
         |                |                                                      |
-        |                |  (3) authorization res (code)                        |
+        |                |  (3.2) authorization res (code)                      |
         |                |<-----------------------------------------------------|
         |                |                                                      |
         |                |  (6) token req (code)                                |
@@ -182,28 +186,30 @@ as part of the issuance flow.
 
 (2) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
 
-(2) In this step, the wallet sends an authorization request to the issuer. This request determines
+(3.1) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
 Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
 request. 
 
-(3) The issuer takes over user interface control and interacts with the user. It will authenticate the
+(4) The issuer takes over user interface control and interacts with the user. It will authenticate the
 user and ask for her consent to issue the requested credentials. The implementation of this step is at
 the discretion of the issuer and out of scope of this specification. The issuer might, for example, 
 use a local or federated login for that purpose. It might also utilize verifiable presentations passed 
 in the authorization request or call back to the user's wallet to dynamically obtain verifiable presentations.
 
-(4) The issuer responds with an authorization code to the wallet. 
+(5) (OPTIONAL) If the Issuer requires additional credentials not submitted by the user as the input in step 3.1, it can use OIDC4VP to dynamically request the user to present them.
 
-(5) The wallet exchanges the authorization code for an Access Token and an ID Token.
+(3.2) The issuer responds with an authorization code to the wallet. 
 
-(6) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymorphic manner depending on the credential type being requested. 
+(6) The wallet exchanges the authorization code for an Access Token and an ID Token.
+
+(7) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymorphic manner depending on the credential type being requested. 
 
 The Issuer will either directly respond with the credentials or issue an Acceptance Token, which 
 is used by the wallet to poll for completion of the issuance process. 
 
-(7) (OPTIONAL) The wallet polls the issuer to obtain the credentials previously requested in 
+(8) (OPTIONAL) The wallet polls the issuer to obtain the credentials previously requested in 
 step (6). The issuer either responds with the credentials or HTTP status code "202" indicating 
 that the issuance is not completed yet. 
 
@@ -211,39 +217,24 @@ Note: if the issuer just wants to offer the user to retrieve an pre-existing cre
 encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
 with step (6). One option would be to encode the data into a QR Code.  
 
-# Overview
+# Flow 1: Simple Flow Overview (without submission of input VCs)
 
-# Set up
+## Authorization Request
 
-## Obtaining the Credential Manifest
-
-Define at least one method here would make sense
-based on the issuer URL, you can navigate to the place where ./well-known/opend-config 
-with a list of all manifests
-RP can determine 
-
-other machanisms possible
-
-manifest as a list of supported types, or with presentation_definition
-
-# Authorization request
-
-## Authorization request without submission of VCs
-
-### Authorization Request
-
+Below is a non-normative example of an authorization request:
 ```
   GET /authorize?
     response_type=code
     &client_id=s6BhdRkqt3 
     &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
     &scope=openid
-    &claims=%7B%22vc_token%...%2dp_vc%22%7D%7D%5D%7D%7D
+    &claims=%7B%22credential%...%2dp_vc%22%7D%7D%5D%7D%7D
     &state=af0ifjsldkj
 ```
 
-#### `claims` parameter
+### `claims` parameter
 
+Below is a non-normative example of a `claims` parameter:
 ```json=
 {
     "credential":{
@@ -253,9 +244,123 @@ manifest as a list of supported types, or with presentation_definition
 }
 ```
 
+## Token Request
+
+Below is a non-normative example of a token request:
+```
+POST /token HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  grant_type=authorization_code
+  &code=SplxlOBeZQQYbYS6WxSbIA
+  &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+  
+```
+
+## Token Response
+
+Below is a non-normative example of a token response:
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz",
+  }
+```
+
+## Credential Request
+
+Below is a non-normative example of a credential request:
+```
+POST /credential HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  proof=%7B%22type%22:%22...-ace0-9c5210e16c32%22%7D
+```
+
+### `proof` parameter
+
+//proof structure depends on the signature type - what should include at minimum? verificationMethod (cryptographically resolvabel identifier), jws (signature) and a_hash (access_token_hash)?
+
+```json
+{
+    "verificationMethod": "did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1",
+    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..l9d0YHjcFAH2H4dB9xlWFZQLUpixVCWJk0eOt4CXQe1NXKWZwmhmn9OQp6YxX0a2LffegtYESTCJEoGVXLqWAA",
+    "a_hash": "2H4dB9xl-FZQL-pixV-WJk0eOt4CXQ-1NXKW"
+}
+```
+
+## Credential Response (synchronous flow)
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "credential" : [
+      "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L" //Base64URL encoded VC
+    ]      
+  }
+```
+
+## Credential Response (deferred flow)
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "acceptance_token": "8xLOxBtZp8"
+ }
+```
+
+
+# Flow 2: Credential Manifest Flow Overview (with submission of input VCs)
+
+## Set up phase
+
+Prior to initiating the transaction with the Issuer, the RP MUST obtain information about which type of VCs the Issuer can issue, and, optionally, what kind of input the Issuer requires from the RP in the request to issue that credential. 
+
+The RP MUST obtain `credential_manifest` as defined in DIF Credential Manifest [@DIF.CredentialManifest].
+
+### Obtaining the Credential Manifest using OpenID Discovery
+
+The RP SHOULD obtain `credential_manifest` using [@!OpenID.Discovery] from a JSON document that the Issuer made available at the path formed by concatenating the string `/.well-known/openid-configuration` to the Issuer's Issuer Identifier. 
+
+This specification defined the following Issuer Metadata:
+* `credential_manifest` 
+  * **OPTIONAL**. A JSON array containing a list of Credential Manifests. This parameter enables Issuers to pass Credential Manifests in a single , self-contained parameter.
+
+* `credential_manifest_uri` 
+  * **OPTIONAL**. A JSON array containing a list of URIs referencing a resouce containing Credential Manifest. This parameter enables Issuers to list Credential Manifests by reference, rather than by value. The scheme used MUST be https. 
+
+Note: may want to remove `https` scheme restriction
+
+Other mechanisms MAY be used to obtain `credential_manifest`.
+
+## Obtaining Credentials required in Credential Manifest
+
+If the obtained Credential Manifest includes `presentation_definition` and requires the RP to present certain credentials in the authorization request, the RP SHOULD obtain those credentials prior to initiating a transaction with this Issuer. Flow 1: Simple Flow defined in this specification MAY be used.
+
 ## Authorization request with submission of VCs
 
 ### Credential Challenge Request
+
+When the RP needs to submit certain pre-obtained credentials to the Issuer to meet the requirements in one of the Issuer's Credential Manifest the RP has pre-obtained, the RP MUST bind credentials it is submitting to a nonce generated by the Issuer. to bind `p_nonce` to present certain credentials in the authorization request (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations.
 
 ```
   POST /nonce HTTP/1.1
@@ -300,7 +405,7 @@ If public client, include client_id
     &client_id=s6BhdRkqt3 
     &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
     &scope=openid
-    &claims=%7B%22vc_token%...%2dp_vc%22%7D%7D%5D%7D%7D
+    &claims=%7B%22credential%...%2dp_vc%22%7D%7D%5D%7D%7D
     &state=af0ifjsldkj
     &nonce=n-0S6_WzA2Mj
 ```
@@ -422,7 +527,7 @@ HTTP/1.1 200 OK
   Pragma: no-cache
 
   {
-    "vc_token" : {
+    "credential" : {
       "credential_fulfillment": {
         "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
         "manifest_id": "WA-DL-CLASS-A",
