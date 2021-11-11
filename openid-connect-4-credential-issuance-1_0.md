@@ -76,9 +76,17 @@ Issuance of a credentials not directly in the response to a credential issuance 
 
 A user comes across an app where she needs to present a credential, e.g. a bank identity credential. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is sent to the issuer's user experience (web site or app). There the user authenticates and is asked for consent to issue the required credential into her wallet. She consents and is sent back to the wallet, where she is informed that a credential was sucessfully created and stored in the wallet.
 
-## Holder initiated credential issuance (with pre-requisites)
+## Holder initiated credential issuance (credential presentation as pre-requisites)
 
-A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that puClientose. The user confirms and is sent to the issuer's user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet. 
+A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers (her university) and is notified that the issuer requires an identity credential as pre-requisite for issuance of the diploma. The wallet also offers to send the existing bank identity credential to the issuer for that purpose. The user confirms and is sent to the issuer's user experience (web site or app). The issuer evaluates the bank identity credential, looks up the user in its database, finds her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet.
+
+## Holder initiated credential issuance (with on-demand credential presentation)
+
+A user comes across an app where she needs to present a credential, e.g. an university diploma. She starts the presentation flow at this app and is sent to her wallet (e.g. via SIOP v2 and OpenID Connect 4 Verifiable Presentations). The wallet determines the desired credential type(s) from the request and notifies the user that there is currently no matching credential in the wallet. The wallet now offers the user a list of suitable issuers, which might be based on an issuer list curated by the wallet publisher. The user picks one of those issuers (her university). The user confirms and is sent to the issuer's user experience (web site or app). The user logs in to the univerity, which determines that 
+the respective user account is not verified yet. The user is offered to either use a video chat for identification or to fetch a suitable identity credential from her wallet. The
+user decides to fetch the necessary credential from her wallet and is sent back. In the wallet, she picks a suitable credential and authorizes transfer to the university. The
+wallet sends her back to the university. Based on the bank identity credential, the university verifies her identity and looks up her data in its database. The university finds 
+her diploma and offers to issue a verifiable credential. The user consents and is sent back to the wallet, where she is informed that a diploma verifiable credential was sucessfully created and stored in the wallet.
 
 ## Issuer initiated credential issuance
 
@@ -98,7 +106,7 @@ The user wants to obtain a digital criminal record certificate. She starts the j
 
 # Requirements
 
-This section describes the requirements this specification aims to fulfill the use cases described above. 
+This section describes the requirements this specification aims to fulfill beyond the use cases described above. 
 
 * Proof of possession of key material
   * Support all kinds of proofs (e.g. signatures, blinded proofs) but also issuance w/o proof
@@ -108,7 +116,7 @@ This section describes the requirements this specification aims to fulfill the u
   * credentials containing different claims for the same user (micro/mono credentials) bound to the same key material
   * batch issuance of multiple credentials of the same type bound to different key material (see mDL)
 * It shall be possible to issue multiple credentials based on same consent (e.g. different formats and/or keys - did:key followed by did:ebsi) 
-* Support for asynchronous issuance of credentials
+* Support for deferred issuance of credentials
 * User authentication and identification
   * Issuer shall be able to dynamically obtain further data and be able to authenticate the user at their discretion
   * Holder shall be able to pass existing credentials (as presentations) or identity assertions to the issuance flow
@@ -147,9 +155,12 @@ The following figure shows the overall flow.
         |                |----------------------------------------------------->|
         |                |                                                      |
     (4) User Login & Consent                                                    |
-        |                |  (5) [opt] request additional VCs (OIDC4VP)          |
+        |                |                                                      |
+        |                |  (5.1) [opt] request additional VCs (OIDC4VP)        |
         |                |<-----------------------------------------------------| 
-        |                |      VCs                                             |
+        |                |                                                      |
+    (5.2) User Consent                                                          |
+        |                |  (5.3) VCs in Verifiable Presentations               |
         |                |----------------------------------------------------->| 
         |                |                                                      |
         |                |  (3.2) authorization res (code)                      |
@@ -200,7 +211,15 @@ the discretion of the issuer and out of scope of this specification. The issuer 
 use a local or federated login for that puClientose. It might also utilize verifiable presentations passed 
 in the authorization request or call back to the user's wallet to dynamically obtain verifiable presentations.
 
-(5) (OPTIONAL) If the Issuer requires additional credentials not submitted by the user as the input in step 3.1, it can use OIDC4VP to dynamically request the user to present them.
+(5.1) (OPTIONAL) The issuers calls back to the wallet to fetch verifiable credentials it needs as
+pre-requisite to issuing the requested credentials. From a protocol perspective, the issuers acts
+now as verifier and sends a request as defined in OpenID Connect for Verifiable Presentations 
+[@OIDC4VP] to the wallet. 
+
+(5.2) (CONDITIONAL) The wallet shows the content of the presentation request to the user. The user selects the 
+appropriate credentials and consents. 
+
+(5.3) (CONDITIONAL) The wallet responds with one or more verifiable presentations to the issuer. 
 
 (3.2) The issuer responds with an authorization code to the wallet. 
 
@@ -218,6 +237,30 @@ that the issuance is not completed yet.
 Note: if the issuer just wants to offer the user to retrieve an pre-existing credential, it can
 encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
 with step (6). One option would be to encode the data into a QR Code.  
+
+# Approaches to present credentials to an Issuer
+
+This draft intentionally supports two different approaches for presenting credentials to the credential issuer, 
+designated as "static" and "dynamic". 
+
+* "static": the wallet determines in the intial steps of the process based on metadata obtained from the issuer, 
+which types of credentials are required in order to obtain credentials. If suitable credentials are available,
+the wallet creates verifiable presentations, which are then send along with the authentication/authorization 
+request to the issuer. This approach is facilitated by the DIF Credential Manifest [@DIF.CredentialManifest]. It requires the 
+wallet to obtain cryptographic nonces, which need to be included into the verifiable presentations in order 
+to prevent replay of those presentations. 
+* "dynamic": the wallet only requests credentials with the authorization request. The issuer determines what 
+credentials it might need as pre-requisite to issue credentials while processing the authorization request. This
+approach is equivalent to an OP reaching out to an 3rd party identity provider to log the user in or to obtain
+further identity claims. The difference is that the claims source is dynamically determined since it is the 
+particular wallet of the user. The dynamic approach allows the issuer to only request the credentials absolutely 
+necessary since it can previously identify or even authenticate the user before requesting credentials. In best case,
+the issuer already has all ncessary data in place and does not need to fetch any credential. 
+
+The draft includes both approaches becauses there is no existing best practice. Given the lack of implementation
+experience, it seems to be the better way to leave implementers the choice. If the  community, based on 
+implementation experience, will gravitate towards one or the other approach, the draft could
+be simplified by removing one of the options. 
 
 # Flow 1: Simple Issuance Flow Overview (without submission of input VCs)
 
@@ -664,6 +707,24 @@ This provides the benefit of the Issuer being able to adhere to the principle of
   </front>
 </reference>
 
+<reference anchor="DIF.CredentialManifest" target="https://identity.foundation/credential-manifest/">
+        <front>
+          <title>Presentation Exchange v1.0.0</title>
+		  <author fullname="Daniel Buchner">
+            <organization>Microsoft</organization>
+          </author>
+          <author fullname="Brent Zunde">
+            <organization>Evernym</organization>
+          </author>
+          <author fullname="Jace Hensley">
+            <organization>Bloom</organization>
+          </author>
+          <author fullname="Daniel McGrogan">
+            <organization>Workday</organization>
+          </author>
+        </front>
+</reference>
+
 <reference anchor="DIF.PresentationExchange" target="https://identity.foundation/presentation-exchange/spec/v1.0.0/">
         <front>
           <title>Presentation Exchange v1.0.0</title>
@@ -678,6 +739,28 @@ This provides the benefit of the Issuer being able to adhere to the principle of
           </author>
          <date month="Feb" year="2021"/>
         </front>
+</reference>
+
+<reference anchor="OIDC4VP" target="https://openid.net/specs/openid-connect-4-verifiable-presentations-1_0.html">
+      <front>
+        <title>OpenID Connect Core 1.0 incorporating errata set 1</title>
+        <author initials="O." surname="Terbu" fullname="Oliver Terbu">
+         <organization>ConsenSys Mesh</organization>
+        </author>
+        <author initials="T." surname="Lodderstedt" fullname="Torsten Lodderstedt">
+          <organization>yes.com</organization>
+        </author>
+        <author initials="K." surname="Yasuda" fullname="Kristina Yasuda">
+          <organization>Microsoft</organization>
+        </author>
+        <author initials="A." surname="Lemmon" fullname="Adam Lemmon">
+          <organization>Convergence.tech</organization>
+        </author>
+        <author initials="T." surname="Looker" fullname="Tobias Looker">
+          <organization>Mattr</organization>
+        </author>
+       <date day="20" month="May" year="2021"/>
+      </front>
 </reference>
 
 <reference anchor="OpenID.Discovery" target="https://openid.net/specs/openid-connect-discovery-1_0.html">
