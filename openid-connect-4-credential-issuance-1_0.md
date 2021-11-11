@@ -128,31 +128,38 @@ The following figure shows the overall flow.
 +--------------+   +-----------+                                         +-------------+
         |                |                                                      |
         |                |                                                      |
+        |                |----------                                            |
+        |                |          | (1) [opt] obtain credential_manifest      |
+        |                |<---------                                            |
         |    interacts   |                                                      |
-        |--------------->|  (1) prepare_presentation                            |
+        |--------------->|  (2) [opt] request presentation nonce                |
         |                |----------------------------------------------------->|
-        |                |      p_nonce                                         |
+        |                |      presentation nonce                              |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-        |                |  (2) authorize (claims, (opt) presentations, ...)    |
+        |                |  (3) authorization req (claims, [opt] input, etc. )  |
         |                |----------------------------------------------------->|
         |                |                                                      |
-    (3) User Login & Consent                                                    |
+    (4) User Login & Consent                                                    |
+        |                |  (5) [opt] request additional VCs (OIDC4VP)          |
+        |                |<-----------------------------------------------------| 
+        |                |      VCs                                             |
+        |                |----------------------------------------------------->| 
         |                |                                                      |
-        |                |  (4) authorize response (code)                       |
+        |                |  (3) authorization res (code)                        |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-        |                |  (5) token (code, ...)                               |
+        |                |  (6) token req (code)                                |
         |                |----------------------------------------------------->| 
         |                |      access_token, id_token                          |
         |                |<-----------------------------------------------------|    
         |                |                                                      |
-        |                |  (6) credentials (access_token, claims, proofs, ...) |
+        |                |  (7) credential req (access_token, proofs, ...)      |
         |                |----------------------------------------------------->| 
-        |                |      credentials OR acceptance_token                 |
+        |                |      credential req (credentials OR acceptance_token)|
         |                |<-----------------------------------------------------|   
         |                |                                                      |
-        |                |  (7) poll_credentials (acceptance_token)             |
+        |                |  (8) [opt] poll_credentials (acceptance_token)       |
         |                |----------------------------------------------------->| 
         |                |      credentials OR not_ready_yet                    |
         |                |<-----------------------------------------------------|          
@@ -171,7 +178,9 @@ It is assumed that the wallet has already obtained knowledge about what credenti
 Credential Issuer offers and whether this issuer expects the holder to present existing credentials
 as part of the issuance flow. 
 
-(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
+(1) (OPTIONAL) obtain `credential_manifest` with an information of which VCs the Issuer can issue, and optionally what kind of input from the user the Issuer requires to issue that credential.
+
+(2) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
 
 (2) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
@@ -202,6 +211,21 @@ Note: if the issuer just wants to offer the user to retrieve an pre-existing cre
 encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
 with step (6). One option would be to encode the data into a QR Code.  
 
+# Overview
+
+# Set up
+
+## Obtaining the Credential Manifest
+
+Define at least one method here would make sense
+based on the issuer URL, you can navigate to the place where ./well-known/opend-config 
+with a list of all manifests
+RP can determine 
+
+other machanisms possible
+
+manifest as a list of supported types, or with presentation_definition
+
 # Authorization request
 
 ## Authorization request without submission of VCs
@@ -222,7 +246,7 @@ with step (6). One option would be to encode the data into a QR Code.
 
 ```json=
 {
-    "vc_token":{
+    "credential":{
         "type": ["uri":"..."],
         "format": "ldp_vc"
     }
@@ -234,47 +258,38 @@ with step (6). One option would be to encode the data into a QR Code.
 ### Credential Challenge Request
 
 ```
-  POST /authorize HTTP/1.1
+  POST /nonce HTTP/1.1
     Host: server.example.com
     Content-Type: application/x-www-form-urlencoded
+    Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
     
-    redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
-    &claims=%7B%22vc_token%...%2ldp_vc%22%7D%7D%5D%7D%7D
-    &state=af0ifjsldkj
-    &nonce=n-0S6_WzA2Mj
 ```
 //What is the minimum set of parameters for the credential challenge request? Is `client_id` needed?
+request authenticated as a PAR request - in mTLS client_id in the body; client secret - authorization header.
 
-#### `claims` parameter
+simple request that allows to create a simple presentation.
+bind a nonce to a client ID.
 
-```json=
-{
-    "vc_token": {    
-      "credential_application": {
-        "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-        "manifest_id": "WA-DL-CLASS-A",
-        "submission_id": "a30e3b91-fb77-4d22-95fa-871689c322e2"
-        "format": {
-          "ldp_vc": {
-            "proof_type": [
-              "JsonWebSignature2020",
-              "EcdsaSecp256k1Signature2019"
-            ]
-          }
-        }
-      }
-   }
-}
-```
-//`submission_id` not in the CM spec, yet.
+Is is POST? PUT?
+PUT - creation of a resource subsequent 
+
+If public client, include client_id
+
+- Need to do client authentication
+- hit /nonce
 
 ### Credential Challenge Response
 
 ```
-HTTP/1.1 302 Found
-  Location: https://wallet.example.org/cb?
-    presentation_nonce=fbe22300-57a6-4f08-ace0-9c5210e16c32
-    &state=af0ifjsldkj
+ HTTP/1.1 200 OK
+  Content-Type: application/json;charset=UTF-8
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "presentation_nonce": "fbe22300-57a6-4f08-ace0-9c5210e16c32",
+    "expires_in": "3600"
+  }
 ```
 
 ### Authorization Request
@@ -294,7 +309,21 @@ HTTP/1.1 302 Found
 
 ```json=
 {
-    "vc_token": {    
+    "credential": {    
+      "credential_application": {
+        "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "manifest_id": "WA-DL-CLASS-A",
+        "format": {
+          "ldp_vc": {
+            "proof_type": [
+              "JsonWebSignature2020",
+              "EcdsaSecp256k1Signature2019"
+            ]
+          }
+        }
+      }
+   },
+     {
       "presentation_submission": {
         "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
         "definition_id": "32f54163-7166-48f1-93d8-ff217bdb0653",
@@ -309,6 +338,10 @@ HTTP/1.1 302 Found
     }
 }
 ```
+What is the value of the credential_application
+passing presentation_submission is a rathole..?
+
+dynamic option also needs to be speced out. 
 
 # Authorization Response
 
@@ -349,6 +382,8 @@ HTTP/1.1 200 OK
   }
 ```
 // Can Refresh Token be included?
+// do we need an ID Token? if not, no scope=openid - will not be able to use `claims`
+will enable `id_token_hint` 
 
 # Credential Request
 ```
@@ -371,6 +406,12 @@ POST /credential HTTP/1.1
     "a_hash": "2H4dB9xl-FZQL-pixV-WJk0eOt4CXQ-1NXKW"
 }
 ```
+
+3 different examples - separate sections
+- super duper simple
+- required creds clarified in advance and sent to the issuer - need CM and presentation_nonce
+- the issuer determines what to request - dynamic w/OIDC4VP
+    how does the issuer determine
 
 # Credential Response (synchronous flow)
 
@@ -397,6 +438,10 @@ HTTP/1.1 200 OK
     }
  }
 ```
+
+if we define that a credential is always included in `credential`, no need for `credential_fulfillment`.
+CM - what issuer can provide, but not use credential_application, just use `type`.
+no need for presentation_submission, just array of VPs? multiple creds of the same type for a different purposes - cannot do this anymore.
 
 # Credential Response (deferred flow)
 
