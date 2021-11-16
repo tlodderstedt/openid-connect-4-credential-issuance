@@ -62,6 +62,14 @@ W3C Verifiable Credential Objects
 
 Both verifiable credentials and verifiable presentations
 
+Credential Manifests 
+
+A resource format that defines preconditional requirements, Issuer style preferences, and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential. (see [DIF.CredentialManifest])
+
+Deferred Credential Issuance
+
+Issuance of a credentials not directly in the response to a credential issuance request, but following a period of time that can be used to perform certain offline business processes.
+
 # Use Cases
 
 ## Holder initiated credential issuance
@@ -117,13 +125,13 @@ This section describes the requirements this specification aims to fulfill beyon
 * It shall be possible to request standard OIDC claims and credentials in the same flow (to implement wallet onboarding, see EBSI/ESSIF onboarding)
 * Support for Credential metadata (holder shall be able to determine the types of credential an issuer is able to issue)
 * Ensure OP is authoritative for respective credential issuer (OP (OIDC issuer URL) <-> Issuer ID (DID))
-* Incorporate/utilize existing specs
+* IncoClientorate/utilize existing specs
   * W3C VC HTTP API(?)
   * DIF Credential manifest(?)
 
 # Overview 
 
-This specification defines mechanisms to allow credential holders (acting as OpenID Connec RPs) to request credential issuers (acting as OpenID Connect OPs) to issue Verifiable Credentials via OpenID Connect. 
+This specification defines mechanisms to allow credential holders (acting as OpenID Connec Clients) to request credential issuers (acting as OpenID Connect OPs) to issue Verifiable Credentials via OpenID Connect. 
 
 The following figure shows the overall flow. 
 
@@ -134,37 +142,41 @@ The following figure shows the overall flow.
 +--------------+   +-----------+                                         +-------------+
         |                |                                                      |
         |                |                                                      |
+        |                |----------                                            |
+        |                |          | (1) [opt] obtain credential_manifest      |
+        |                |<---------                                            |
         |    interacts   |                                                      |
-        |--------------->|  (1) prepare_presentation                            |
+        |--------------->|  (2) [opt] request presentation nonce                |
         |                |----------------------------------------------------->|
-        |                |      p_nonce                                         |
+        |                |      presentation nonce                              |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-        |                |  (2) authorize (claims, (opt) presentations, ...)    |
+        |                |  (3.1) authorization req (claims, [opt] input, etc. )|
         |                |----------------------------------------------------->|
         |                |                                                      |
-    (3) User Login & Consent                                                    |
-        |                |        (3.1) request verifiable presentation(s)      |
+    (4) User Login & Consent                                                    |
+        |                |                                                      |
+        |                |  (5.1) [opt] request additional VCs (OIDC4VP)        |
+        |                |<-----------------------------------------------------| 
+        |                |                                                      |
+    (5.2) User Consent                                                          |
+        |                |  (5.3) VCs in Verifiable Presentations               |
+        |                |----------------------------------------------------->| 
+        |                |                                                      |
+        |                |  (3.2) authorization res (code)                      |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-    (3.2) Consent        |                                                      |
-        |                |        (3.3) verifiable presentations                |
-        |                |----------------------------------------------------->|
-        |                |                                                      |
-        |                |  (4) authorize response (code)                       |
-        |                |<-----------------------------------------------------|
-        |                |                                                      |
-        |                |  (5) token (code, ...)                               |
+        |                |  (6) token req (code)                                |
         |                |----------------------------------------------------->| 
         |                |      access_token, id_token                          |
         |                |<-----------------------------------------------------|    
         |                |                                                      |
-        |                |  (6) credentials (access_token, claims, proofs, ...) |
+        |                |  (7) credential req (access_token, proofs, ...)      |
         |                |----------------------------------------------------->| 
-        |                |      credentials OR acceptance_token                 |
+        |                |      credential req (credentials OR acceptance_token)|
         |                |<-----------------------------------------------------|   
         |                |                                                      |
-        |                |  (7) poll_credentials (acceptance_token)             |
+        |                |  (8) [opt] poll_credentials (acceptance_token)       |
         |                |----------------------------------------------------->| 
         |                |      credentials OR not_ready_yet                    |
         |                |<-----------------------------------------------------|          
@@ -183,40 +195,42 @@ It is assumed that the wallet has already obtained knowledge about what credenti
 Credential Issuer offers and whether this issuer expects the holder to present existing credentials
 as part of the issuance flow. 
 
-(1) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
+(1) (OPTIONAL) obtain `credential_manifest` with an information of which VCs the Issuer can issue, and optionally what kind of input from the user the Issuer requires to issue that credential.
 
-(2) In this step, the wallet sends an authorization request to the issuer. This request determines
+(2) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
+
+(3.1) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
 Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
 request. 
 
-(3) The issuer takes over user interface control and interacts with the user. It will authenticate the
+(4) The issuer takes over user interface control and interacts with the user. It will authenticate the
 user and ask for her consent to issue the requested credentials. The implementation of this step is at
 the discretion of the issuer and out of scope of this specification. The issuer might, for example, 
-use a local or federated login for that purpose. It might also utilize verifiable presentations passed 
+use a local or federated login for that puClientose. It might also utilize verifiable presentations passed 
 in the authorization request or call back to the user's wallet to dynamically obtain verifiable presentations.
 
-(3.1) (OPTIONAL) The issuers calls back to the wallet to fetch verifiable credentials it needs as
+(5.1) (OPTIONAL) The issuers calls back to the wallet to fetch verifiable credentials it needs as
 pre-requisite to issuing the requested credentials. From a protocol perspective, the issuers acts
 now as verifier and sends a request as defined in OpenID Connect for Verifiable Presentations 
 [@OIDC4VP] to the wallet. 
 
-(3.2) (CONDITIONAL) The wallet shows the content of the presentation request to the user. The user selects the 
+(5.2) (CONDITIONAL) The wallet shows the content of the presentation request to the user. The user selects the 
 appropriate credentials and consents. 
 
-(3.3) (CONDITIONAL) The wallet responds with one or more verifiable presentations to the issuer. 
+(5.3) (CONDITIONAL) The wallet responds with one or more verifiable presentations to the issuer. 
 
-(4) The issuer responds with an authorization code to the wallet. 
+(3.2) The issuer responds with an authorization code to the wallet. 
 
-(5) The wallet exchanges the authorization code for an Access Token and an ID Token.
+(6) The wallet exchanges the authorization code for an Access Token and an ID Token.
 
-(6) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymorphic manner depending on the credential type being requested. 
+(7) This Access Token is used to request the issuance of the actual credentials. The types of credentials the wallet wants to obtain have been passed in the authorization request in (3). This request passes the key material the respective credential shall be bound to. If required by the issuer, the wallet also passes a proof of posession for the key material. This proof of posession uses the SHA256 hash of the Access Token as cryptographic nonce. This ensure replay protection of the proofs. Key material can be expressed in a polymoClienthic manner depending on the credential type being requested. 
 
 The Issuer will either directly respond with the credentials or issue an Acceptance Token, which 
 is used by the wallet to poll for completion of the issuance process. 
 
-(7) (OPTIONAL) The wallet polls the issuer to obtain the credentials previously requested in 
+(8) (OPTIONAL) The wallet polls the issuer to obtain the credentials previously requested in 
 step (6). The issuer either responds with the credentials or HTTP status code "202" indicating 
 that the issuance is not completed yet. 
 
@@ -224,7 +238,7 @@ Note: if the issuer just wants to offer the user to retrieve an pre-existing cre
 encode the parameter set of step (6) in a suitable representation and allow the wallet to start 
 with step (6). One option would be to encode the data into a QR Code.  
 
-## Approaches to present credentials to an Issuer
+# Approaches to present credentials to an Issuer
 
 This draft intentionally supports two different approaches for presenting credentials to the credential issuer, 
 designated as "static" and "dynamic". 
@@ -247,6 +261,457 @@ The draft includes both approaches becauses there is no existing best practice. 
 experience, it seems to be the better way to leave implementers the choice. If the  community, based on 
 implementation experience, will gravitate towards one or the other approach, the draft could
 be simplified by removing one of the options. 
+
+# Flow 1: Simple Issuance Flow Overview (without submission of input VCs)
+
+This section describes how to perform issuance of a credential using the Simple Issuance Flow, when a credential is issued based on the information the Issuer has obtained about the End-user.
+
+In the Simple Issuance Flow, the credential is issued without credentials being submitted by the End-user. 
+
+It is an Authorization Code Flow with the following additions:
+- an extended authorization request syntax that allows to request credential types to be issued
+- ability to bind issued credential to a proof submitted by the Client
+- a newly defined Credential Endpoint from which credentials can be issued
+- acceptance_token that allows Deferred Credential Issuance
+
+## Authorization Endpoint
+
+The Authorization Endpoint is used in the same manner as for the Authorization Code Flow, as defined in Section 3.1.2 of [@!OpenID], with the exception of the differences specified in this section. 
+ 
+### Authorization Request
+
+Authentication Requests are made as defined in Section 3.1.2.1 of [@!OpenID], except that it MUST include the `claims` parameter defined in section 5.5 of [@!OpenID] with a new top-level element `credential`. This element contains type and format of a desired credential as defined below:
+
+* `type`
+  * REQUIRED. A JSON array of objects. Each object represents a string of a valid URI for a schema of a requested credential
+* `format`
+  * REQUIRED. A JSON array of strings that representing a format in which credential is requested to be issued. Valid values are `jwt_vc` and `ldp_vc`.
+
+Below is a non-normative example of an authorization request:
+```
+  GET /authorize?
+    response_type=code
+    &client_id=s6BhdRkqt3 
+    &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+    &scope=openid
+    &claims=%7B%22credential%...%2dp_vc%22%7D%7D%5D%7D%7D
+    &state=af0ifjsldkj
+```
+
+Below is a non-normative example of a `claims` parameter:
+```json=
+{
+    "credential": {
+        "type": ["uri":"..."],
+        "format": "ldp_vc"
+    },
+    "id_token": {
+      "auth_time": {"essential": true},
+      "acr": {"values": ["urn:mace:incommon:iap:silver"] }
+    }
+}
+```
+
+Note: Nat in his [comment](https://bitbucket.org/openid/connect/issues/1276/section-22-missing-parameter-to-determine#comment-61325439) has also proposed using `scope`, which makes sense, but would not allow to specify the `format` property.
+
+```json=
+GET /authorize?
+    response_type=code
+    &scope=openid%20https://did.exmaple.org/mDL
+    &client_id=s6BhdRkqt3
+    &state=af0ifjsldkj
+    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
+```
+
+### Successful Authorization Response
+
+Authentication Responses MUST be made as defined in Section 3.1.2.5 of [@!OpenID].
+
+Below is a non-normative example of
+```
+HTTP/1.1 302 Found
+  Location: https://wallet.example.org/cb?
+    code=SplxlOBeZQQYbYS6WxSbIA
+    &state=af0ifjsldkj
+```
+
+### Authentication Error Response
+
+Authentication Error Response MUST be made as defined in section 3.1.2.6 of [@!OpenID].
+
+The following is a non-normative example of an unsuccessful token response.
+
+```json=
+HTTP/1.1 302 Found
+Location: https://client.example.net/cb?
+    error=invalid_request
+    &error_description=Unsupported%20response_type%20value
+    &state=af0ifjsldkj
+```
+
+## Token Endpoint
+
+The Token Endpoint is used in the same manner as for the Authorization Code Flow, as defined in Section 3.1.3 of [@!OpenID].
+
+### Token Request
+
+Upon receivina a successful Authentication Request, a Token Request is made as defined in Section 3.1.3.1 of [@!OpenID].
+
+* grant_type 
+  * REQUIRED. The value MUST be authorization_code  
+* code
+  * REQUIRED. The value MUST be the value of the code parameter received in the Authorization Response.
+
+Below is a non-normative example of a token request:
+```
+POST /token HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  grant_type=authorization_code
+  &code=SplxlOBeZQQYbYS6WxSbIA
+  &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+  
+```
+
+### Successful Token Response
+
+Authentication Requests are made as defined in Section 3.1.3.3 of [@!OpenID].
+
+Below is a non-normative example of a token response:
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz",
+  }
+```
+
+Note: Nat in his comment, proposed to return a separate access_token for the Credential Endpoint - not sure in which use-case that would be necessary:
+
+```json=
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz", 
+    "c_token": {"url":"https://server.example.org/c", "access_token": "eyJhbGafsd..qVV"}
+}
+```
+
+### Token Error Response
+
+If the Token Request is invalid or unauthorized, the Authorization Server constructs the error response. The parameters of the Token Error Response are defined as in Section 5.2 of OAuth 2.0 [RFC6749]. The HTTP response body uses the application/json media type with HTTP response code of 400.
+
+The following is a non-normative example Token Error Response:
+
+```json=
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+Pragma: no-cache
+
+{
+   "error": "invalid_request"
+}
+```
+
+Note: In Claims Aggregation draft, it is assumed that `out-of-sync` flow is when there is a time gap in-between Token response and Credential Request. Wallet will pre-obtain Access Tokens and use them when the request actually comes in. It will not work if the wallet learns which credential is required only after receiving the RP request...
+
+## Credential Endpoint
+
+The Credential Endpoint performs Issuance of a credential requested by the End-User. This is done by sending the User Agent to the Credential Endpoint with a parameter defined in this section.
+
+Communication with the Credential Endpoint MUST utilize TLS. 
+
+### Credential Request
+
+A Client makes a Credential Request by presenting a proof to which it is requesting the issued credential to be bound to. 
+
+The Client sends the `proof` parameter to the Credential Endpoint using the HTTP POST method.
+
+### `proof` Property
+
+The `proof` property depends on the signature type. At the minimum, the following parameters MUST be included:
+
+* verificationMethod 
+  * REQUIRED. cryptographically resolvable identifier
+* jws  
+  * REQUIRED. A signature performed by a key that can be obtained by an identifier in verificationMethod.
+* a_hash 
+  * REQUIRED. Hash of an access_token obtained in the Token Request. It is required to prevent submitted `proof` property from being replayed by a malicious Client.
+
+Below is a non-normative example of a `proof` parameter:
+
+```json
+{
+    "verificationMethod": "did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1",
+    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..l9d0YHjcFAH2H4dB9xlWFZQLUpixVCWJk0eOt4CXQe1NXKWZwmhmn9OQp6YxX0a2LffegtYESTCJEoGVXLqWAA",
+    "a_hash": "2H4dB9xl-FZQL-pixV-WJk0eOt4CXQ-1NXKW"
+}
+```
+
+Below is a non-normative example of a credential request:
+```
+POST /credential HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+
+  proof=%7B%22type%22:%22...-ace0-9c5210e16c32%22%7D
+```
+
+Note: I think `sub_jwk` in the Authorization Request is how Claims Aggregation proposes to provide to bind a credential to:
+sub_jwk
+OPTIONAL. Used when making a Signed Claimset Request, defines the key material the IdA is requesting the claim set to be bound to the key responsible for signing the request object. The value is a JSON Object that is a valid JWK.
+
+### Credential Response (synchronous flow)
+
+When the Issuer can immideately issue a requested credential and wants to send an issued credential to the Client, the Credential Response MUST return the following parameter:
+
+* credential
+  * REQUIRED. An Array of issued credentials.
+
+Below is a non-normative example of a credential response in a synchronous flow of a Simple Issuance Response:
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "format": "jwt_vc"
+    "credential" : [
+      "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L" //Base64URL encoded VC
+    ]      
+  }
+```
+
+### Credential Response (deferred flow)
+
+When the Issuer cannot immideately issue a requested credential and wants to send a token that the Client can later use to receive a credential once it is ready, the Credential Response MUST return the following parameter:
+
+* acceptance_token
+  * REQUIRED. A string. MUST be a cryptographically random value.
+
+Below is a non-normative example of a credential response in a deferred flow:
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "acceptance_token": "8xLOxBtZp8"
+ }
+```
+
+Note: Nat suggested CIBA Ping/Push callback can be used. Another option would be the Client providing client_notification_token to the Issuer, so that the issuer send Credential response of successfully receiving a Creedntial request and than no need for the client to bring an acceptance token, the Issuer will send the credential once it is issued in a response that includes client_notification_token.
+
+# Flow 2: Credential Manifest Flow Overview (with submission of input VCs)
+
+This section describes how to perform issuance of a credential using the Credential Manifest Flow, when a credential is issued based on the credentials submitted by the Client.
+
+In the Credential Manifest Flow, the Client needs to pre-obtain the Issuer's Credential Manifest, and the necessary input credentials, if any. This provides the benefit of the Issuer being able to issue a credential without necessarily having information about that user being stored in its database.
+
+It is an Authorization Code Flow with the following additions, in addition to those outlined in a Simple Issuance Flow:
+- a mechanism to pre-obtain Credential Manifest
+- a mechanism to obtain a presentation nonce to bind credentials being submitted to the Issuer as an input
+
+Note: discuss the benefits
+
+## Set up phase
+
+Prior to initiating the transaction with the Issuer, the Client MUST obtain information about which type of VCs the Issuer can issue, and, optionally, what kind of input the Issuer requires from the Client in the request to issue that credential. 
+
+The Client MUST obtain `credential_manifest` as defined in DIF Credential Manifest [DIF.CredentialManifest].
+
+### Obtaining the Credential Manifest using OpenID Discovery
+
+The Client SHOULD obtain `credential_manifest` using [@!OpenID.Discovery] from a JSON document that the Issuer made available at the path formed by concatenating the string `/.well-known/openid-configuration` to the Issuer's Issuer Identifier. 
+
+This specification defined the following Issuer Metadata:
+* `credential_manifest` 
+  * **OPTIONAL**. A JSON array containing a list of Credential Manifests. This parameter enables Issuers to pass Credential Manifests in a single , self-contained parameter.
+
+* `credential_manifest_uri` 
+  * **OPTIONAL**. A JSON array containing a list of URIs referencing a resouce containing Credential Manifest. This parameter enables Issuers to list Credential Manifests by reference, rather than by value. The scheme used MUST be https. 
+
+Note: may want to remove `https` scheme restriction
+
+Other mechanisms MAY be used to obtain `credential_manifest`.
+
+### Obtaining Credentials required in Credential Manifest
+
+If the obtained Credential Manifest includes `presentation_definition` and requires the Client to present certain credentials in the authorization request, the Client SHOULD obtain those credentials prior to initiating a transaction with this Issuer. Flow 1: Simple Flow defined in this specification MAY be used.
+
+## Nonce Endpoint
+
+The Nonce Endpoint performs Issuance of a presentation nonce requested by the Client. This is done the Clients using the HTTP POST to send Presentation Nonce Request. 
+
+The Client MUST obtain a presentation nonce from the Issuer, when the Client needs to submit certain pre-obtained credentials to the Issuer to meet the requirements in one of the Issuer's Credential Manifests. The Client MUST bind credentials it is submitting to the received presentation nonce. This step is necessary to prevent submitted VCs from being replayed by a malicious Client.
+
+Communication with the Nonce Endpoint MUST utilize TLS. 
+
+### Presentation Nonce Request
+
+Clients MUST use the HTTP POST method to send the Presentation Nonce Request to the Nonce Server. The Request SHOULD not include any parameters.
+
+The Client MUST perform Client Authentication as defined in Section 9 of [@!OpenID].
+
+Below is a non-normative example of a presentation nonce request using `client_secret_basic` Client Authentication:
+
+```
+  POST /nonce HTTP/1.1
+    Host: server.example.com
+    Content-Type: application/x-www-form-urlencoded
+    Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+    
+```
+
+
+### Credential Challenge Response
+
+After receiving and validating a valid Presentation Nonce Request from the Client, the Nonce Server returns a successful response that includes a presentation nonce. The response uses the application/json media type.
+
+The following parameter MUST be included in the response:
+
+* p_nonce
+  * presentation nonce that the Client MUST include in the presentations when submitting input credentials in the Authorization Request.
+
+Below is a non-normative example of a credential challenge response
+
+```
+ HTTP/1.1 200 OK
+  Content-Type: application/json;charset=UTF-8
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "p_nonce": "fbe22300-57a6-4f08-ace0-9c5210e16c32",
+    "expires_in": "3600"
+  }
+```
+## Authorization Endpoint
+
+The Authorization Endpoint is used in the same manner as for the Authorization Code Flow, as defined in Section 3.1.2 of [@!OpenID], with the exception of the differences specified in the Simple Issuance Flow of this document. 
+
+### Authorization Request
+
+Authentication Requests are made as defined in Section 3.1.2.1 of [@!OpenID], except that it MUST include the `claims` parameter defined in section 5.5 of [@!OpenID] with a new top-level element `credential`. This element contains `credential_application`, and optionally `presentation_submission` properties buth as defined in [DIF.CredentialManifest].
+
+Note: If we define that a credential is always included in `credential`, no need for `credential_fulfillment`. If no need for `credential_fulfillment`, no need for `credential_application`. Instead, can simply say input for which `manifest_id`/`type` of a credential you are providing? 
+Note: no need for presentation_submission, just array of VPs? Will not be able to do request issuing multiple credentials of the same type for different puClientoses?
+
+Below is a non-normative example of a `claims` parameter with both `credential_application` and `presentation_submission`:
+
+```json=
+{
+    "credential": {    
+      "credential_application": {
+        "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "manifest_id": "WA-DL-CLASS-A",
+        "format": {
+          "ldp_vc": {
+            "proof_type": [
+              "JsonWebSignature2020",
+              "EcdsaSecp256k1Signature2019"
+            ]
+          }
+        }
+      }
+   },
+     {
+      "presentation_submission": {
+        "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
+        "definition_id": "32f54163-7166-48f1-93d8-ff217bdb0653",
+        "descriptor_map": [
+          {
+            "id": "input_1",
+            "format": "jwt_vc",
+            "path": "$.verifiableCredential[0]"
+          }
+        ]
+      }
+    }
+}
+```
+
+### Authorization Response
+
+As defined in the Simple Issuance Flow, Authentication Responses are made as defined in Section 3.1.2.5 of [@!OpenID].
+
+## Token Endpoint
+
+As defined in the Simple Issuance Flow, The Token Endpoint is used in the same manner as for the Authorization Code Flow, as defined in Section 3.1.3 of [@!OpenID].
+
+### Token Request
+
+As defined in the Simple Issuance Flow, Token Requests are made as defined in Section 3.1.3.1 of [@!OpenID].
+
+### Token Response
+
+As defined in the Simple Issuance Flow, Authentication Requests are made as defined in Section 3.1.3.3 of [@!OpenID].
+
+## Credential Endpoint 
+
+The Credential Endpoint performs Issuance of a credential requested by the End-User as specified in the Simple Issuance Flow of this document.
+
+### Credential Request
+
+A Client makes a Credential Request by presenting a proof to which it is requesting the issued credential to be bound to as specified in the Simple Issuance Flow of this document.
+
+# Credential Response (synchronous flow)
+
+When the Issuer can immideately issue a requested credential and wants to send an issued credential to the Client, the Credential Response MUST include `credential_fulfillment` in a top-level property `credential` defined in Simple Issuance Flow
+
+Below is a non-normative example of a credential response in a synchronous flow in a Credential Manifest Flow:
+
+```
+HTTP/1.1 200 OK
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+  {
+    "credential" : {
+      "credential_fulfillment": {
+        "id": "a30e3b91-fb77-4d22-95fa-871689c322e2",
+        "manifest_id": "WA-DL-CLASS-A",
+        "descriptor_map": [
+          {
+            "id": "driving_license_1",
+            "format": "ldp_vc",
+            "path": "$.verifiableCredential[0]"
+          }
+        ]
+      },
+      "verifiableCredential":{...}
+    }
+ }
+```
+
+# Credential Response (deferred flow)
+
+When the Issuer cannot immideately issue a requested credential and wants to send a token that the Client can later use to receive a credential once it is ready, the Credential Response MUST return the `acceptance_token` as defined in a Simple Issuance Flow:
+
+# Dynamic request (with OR without submission of input VCs)
+
+This section describes how the Issuer can obtain additional credentials from the End-user if the input submitted by the End-user in the authorization request was not sufficient. The flow utilizes [OIDC4VP] to dynamically request additional credentials. The flow can be used with both Simple Issuance Flow and Credential Manifest Flow.
+
+This provides the benefit of the Issuer being able to adhere to the principle of data minimization, for example by including only minimum requirements in the Credentiam Manifest knowing that it can supplement additional information if needed.
+
+# ToDo
+
+- add DIF.CredentialManifest informative reference
 
 {backmatter}
 
@@ -293,7 +758,7 @@ be simplified by removing one of the options.
 
 <reference anchor="OpenID" target="http://openid.net/specs/openid-connect-core-1_0.html">
   <front>
-    <title>OpenID Connect Core 1.0 incorporating errata set 1</title>
+    <title>OpenID Connect Core 1.0 incoClientorating errata set 1</title>
     <author initials="N." surname="Sakimura" fullname="Nat Sakimura">
       <organization>NRI</organization>
     </author>
@@ -369,9 +834,9 @@ be simplified by removing one of the options.
       </front>
 </reference>
 
-<reference anchor="OpenID-Discovery" target="https://openid.net/specs/openid-connect-discovery-1_0.html">
+<reference anchor="OpenID.Discovery" target="https://openid.net/specs/openid-connect-discovery-1_0.html">
   <front>
-    <title>OpenID Connect Discovery 1.0 incorporating errata set 1</title>
+    <title>OpenID Connect Discovery 1.0 incoClientorating errata set 1</title>
     <author initials="N." surname="Sakimura" fullname="Nat Sakimura">
       <organization>NRI</organization>
     </author>
@@ -390,7 +855,7 @@ be simplified by removing one of the options.
 
 <reference anchor="OpenID.Registration" target="https://openid.net/specs/openid-connect-registration-1_0.html">
         <front>
-          <title>OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1</title>
+          <title>OpenID Connect Dynamic Client Registration 1.0 incoClientorating errata set 1</title>
 		  <author fullname="Nat Sakimura">
             <organization>NRI</organization>
           </author>
@@ -416,9 +881,9 @@ We would like to thank John Bradley, David Waite, and Alen Horvat for their valu
 
 Copyright (c) 2021 The OpenID Foundation.
 
-The OpenID Foundation (OIDF) grants to any Contributor, developer, implementer, or other interested party a non-exclusive, royalty free, worldwide copyright license to reproduce, prepare derivative works from, distribute, perform and display, this Implementers Draft or Final Specification solely for the purposes of (i) developing specifications, and (ii) implementing Implementers Drafts and Final Specifications based on such documents, provided that attribution be made to the OIDF as the source of the material, but that such attribution does not indicate an endorsement by the OIDF.
+The OpenID Foundation (OIDF) grants to any Contributor, developer, implementer, or other interested party a non-exclusive, royalty free, worldwide copyright license to reproduce, prepare derivative works from, distribute, perform and display, this Implementers Draft or Final Specification solely for the puClientoses of (i) developing specifications, and (ii) implementing Implementers Drafts and Final Specifications based on such documents, provided that attribution be made to the OIDF as the source of the material, but that such attribution does not indicate an endorsement by the OIDF.
 
-The technology described in this specification was made available from contributions from various sources, including members of the OpenID Foundation and others. Although the OpenID Foundation has taken steps to help ensure that the technology is available for distribution, it takes no position regarding the validity or scope of any intellectual property or other rights that might be claimed to pertain to the implementation or use of the technology described in this specification or the extent to which any license under such rights might or might not be available; neither does it represent that it has made any independent effort to identify any such rights. The OpenID Foundation and the contributors to this specification make no (and hereby expressly disclaim any) warranties (express, implied, or otherwise), including implied warranties of merchantability, non-infringement, fitness for a particular purpose, or title, related to this specification, and the entire risk as to implementing this specification is assumed by the implementer. The OpenID Intellectual Property Rights policy requires contributors to offer a patent promise not to assert certain patent claims against other contributors and against implementers. The OpenID Foundation invites any interested party to bring to its attention any copyrights, patents, patent applications, or other proprietary rights that may cover technology that may be required to practice this specification.
+The technology described in this specification was made available from contributions from various sources, including members of the OpenID Foundation and others. Although the OpenID Foundation has taken steps to help ensure that the technology is available for distribution, it takes no position regarding the validity or scope of any intellectual property or other rights that might be claimed to pertain to the implementation or use of the technology described in this specification or the extent to which any license under such rights might or might not be available; neither does it represent that it has made any independent effort to identify any such rights. The OpenID Foundation and the contributors to this specification make no (and hereby expressly disclaim any) warranties (express, implied, or otherwise), including implied warranties of merchantability, non-infringement, fitness for a particular puClientose, or title, related to this specification, and the entire risk as to implementing this specification is assumed by the implementer. The OpenID Intellectual Property Rights policy requires contributors to offer a patent promise not to assert certain patent claims against other contributors and against implementers. The OpenID Foundation invites any interested party to bring to its attention any copyrights, patents, patent applications, or other proprietary rights that may cover technology that may be required to practice this specification.
 
 # Document History
 

@@ -14,22 +14,24 @@ autoactivate on
 hide footbox
 
 U -> W: interact
-note over W: Wallet discovers input material\nrequired to request issuance\nof a certain credential (Optional)
+note over W: Wallet discovers manifest listing\nrequirements to receive\nof a certain credential (Optional)
+note over W: Wallet preobtains credentials necessary\nas the input to receive certain credentials (Optional)
 
 alt no presentations required in authorization request
-W -> AS: authorize (credential type in claims parameter)
+W -> AS: authorization request with desired credential type in the claims parameter
+end
 
-else presentations required in authorization request
-W -> Setup: that's what I want (credential types)
-return (opt)list of required credentials, presentation_nonce
+alt presentations required in authorization request
+W -> AS: issuance request with manifest_id in credential_application
+return presentation_nonce as a challenge
 
-W -> W: prepare presentations (bound to presentation_nonce)
+W -> W: prepare VCs as VP bound to presentation_nonce
 deactivate W
 
-W -> PAR: (credential type in claims parameter and presentations))
-return request_uri
+W -> AS: authorizeation request with presentations as input in presentation_submission\n[Can use PAR is the request is too big in the size]
 
-W -> AS: authorize (client_id, request_uri)
+opt W -> PAR: submissing presentations
+return request_uri
 end
 
 note over AS: Issuer will authenticate user or utilize credentials or assertions to identify user. \noptions: local login, callback to wallet (shown below), federated login (via OpenID or SAML), ...
