@@ -514,7 +514,7 @@ HTTP/1.1 200 OK
  }
 ```
 
-Note: Nat suggested CIBA Ping/Push callback can be used or acceptance_token kind of flow..?
+Note: Nat suggested CIBA Ping/Push callback can be used. Another option would be the Client providing client_notification_token to the Issuer, so that the issuer send Credential response of successfully receiving a Creedntial request and than no need for the client to bring an acceptance token, the Issuer will send the credential once it is issued in a response that includes client_notification_token.
 
 # Flow 2: Credential Manifest Flow Overview (with submission of input VCs)
 
