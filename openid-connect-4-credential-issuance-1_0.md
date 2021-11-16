@@ -301,16 +301,31 @@ Below is a non-normative example of an authorization request:
 Below is a non-normative example of a `claims` parameter:
 ```json=
 {
-    "credential":{
+    "credential": {
         "type": ["uri":"..."],
         "format": "ldp_vc"
+    },
+    "id_token": {
+      "auth_time": {"essential": true},
+      "acr": {"values": ["urn:mace:incommon:iap:silver"] }
     }
 }
 ```
 
-### Authorization Response
+Note: Nat in his [comment](https://bitbucket.org/openid/connect/issues/1276/section-22-missing-parameter-to-determine#comment-61325439) has also proposed using `scope`, which makes sense, but would not allow to specify the `format` property.
 
-Authentication Responses are made as defined in Section 3.1.2.5 of [@!OpenID].
+```json=
+GET /authorize?
+    response_type=code
+    &scope=openid%20https://did.exmaple.org/mDL
+    &client_id=s6BhdRkqt3
+    &state=af0ifjsldkj
+    &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
+```
+
+### Successful Authorization Response
+
+Authentication Responses MUST be made as defined in Section 3.1.2.5 of [@!OpenID].
 
 Below is a non-normative example of
 ```
@@ -320,13 +335,32 @@ HTTP/1.1 302 Found
     &state=af0ifjsldkj
 ```
 
+### Authentication Error Response
+
+Authentication Error Response MUST be made as defined in section 3.1.2.6 of [@!OpenID].
+
+The following is a non-normative example of an unsuccessful token response.
+
+```json=
+HTTP/1.1 302 Found
+Location: https://client.example.net/cb?
+    error=invalid_request
+    &error_description=Unsupported%20response_type%20value
+    &state=af0ifjsldkj
+```
+
 ## Token Endpoint
 
 The Token Endpoint is used in the same manner as for the Authorization Code Flow, as defined in Section 3.1.3 of [@!OpenID].
 
 ### Token Request
 
-Authentication Requests are made as defined in Section 3.1.3.1 of [@!OpenID].
+Upon receivina a successful Authentication Request, a Token Request is made as defined in Section 3.1.3.1 of [@!OpenID].
+
+* grant_type 
+  * REQUIRED. The value MUST be authorization_code  
+* code
+  * REQUIRED. The value MUST be the value of the code parameter received in the Authorization Response.
 
 Below is a non-normative example of a token request:
 ```
@@ -341,7 +375,7 @@ POST /token HTTP/1.1
   
 ```
 
-### Token Response
+### Successful Token Response
 
 Authentication Requests are made as defined in Section 3.1.3.3 of [@!OpenID].
 
@@ -360,6 +394,37 @@ HTTP/1.1 200 OK
   }
 ```
 
+Note: Nat in his comment, proposed to return a separate access_token for the Credential Endpoint - not sure in which use-case that would be necessary:
+
+```json=
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz", 
+    "c_token": {"url":"https://server.example.org/c", "access_token": "eyJhbGafsd..qVV"}
+}
+```
+
+### Token Error Response
+
+If the Token Request is invalid or unauthorized, the Authorization Server constructs the error response. The parameters of the Token Error Response are defined as in Section 5.2 of OAuth 2.0 [RFC6749]. The HTTP response body uses the application/json media type with HTTP response code of 400.
+
+The following is a non-normative example Token Error Response:
+
+```json=
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+Pragma: no-cache
+
+{
+   "error": "invalid_request"
+}
+```
+
+Note: In Claims Aggregation draft, it is assumed that `out-of-sync` flow is when there is a time gap in-between Token response and Credential Request. Wallet will pre-obtain Access Tokens and use them when the request actually comes in. It will not work if the wallet learns which credential is required only after receiving the RP request...
+
 ## Credential Endpoint
 
 The Credential Endpoint performs Issuance of a credential requested by the End-User. This is done by sending the User Agent to the Credential Endpoint with a parameter defined in this section.
@@ -377,7 +442,7 @@ The Client sends the `proof` parameter to the Credential Endpoint using the HTTP
 The `proof` property depends on the signature type. At the minimum, the following parameters MUST be included:
 
 * verificationMethod 
-  * cryptographically resolvable identifier
+  * REQUIRED. cryptographically resolvable identifier
 * jws  
   * REQUIRED. A signature performed by a key that can be obtained by an identifier in verificationMethod.
 * a_hash 
@@ -403,6 +468,10 @@ POST /credential HTTP/1.1
   proof=%7B%22type%22:%22...-ace0-9c5210e16c32%22%7D
 ```
 
+Note: I think `sub_jwk` in the Authorization Request is how Claims Aggregation proposes to provide to bind a credential to:
+sub_jwk
+OPTIONAL. Used when making a Signed Claimset Request, defines the key material the IdA is requesting the claim set to be bound to the key responsible for signing the request object. The value is a JSON Object that is a valid JWK.
+
 ### Credential Response (synchronous flow)
 
 When the Issuer can immideately issue a requested credential and wants to send an issued credential to the Client, the Credential Response MUST return the following parameter:
@@ -419,6 +488,7 @@ HTTP/1.1 200 OK
   Pragma: no-cache
 
   {
+    "format": "jwt_vc"
     "credential" : [
       "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L" //Base64URL encoded VC
     ]      
@@ -444,6 +514,8 @@ HTTP/1.1 200 OK
  }
 ```
 
+Note: Nat suggested CIBA Ping/Push callback can be used or acceptance_token kind of flow..?
+
 # Flow 2: Credential Manifest Flow Overview (with submission of input VCs)
 
 This section describes how to perform issuance of a credential using the Credential Manifest Flow, when a credential is issued based on the credentials submitted by the Client.
@@ -453,7 +525,6 @@ In the Credential Manifest Flow, the Client needs to pre-obtain the Issuer's Cre
 It is an Authorization Code Flow with the following additions, in addition to those outlined in a Simple Issuance Flow:
 - a mechanism to pre-obtain Credential Manifest
 - a mechanism to obtain a presentation nonce to bind credentials being submitted to the Issuer as an input
-- 
 
 Note: discuss the benefits
 
