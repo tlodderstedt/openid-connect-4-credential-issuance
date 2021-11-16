@@ -7,7 +7,7 @@ keyword = ["security", "openid", "ssi"]
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "openid-connect-4-verifiable-credential-issuance-1_0-00"
+value = "openid-connect-4-verifiable-credential-issuance-1_0-01"
 status = "standard"
 
 [[author]]
@@ -38,25 +38,25 @@ This specification defines an extension of OpenID Connect to allow holders to re
 
 This specification extends OpenID Connect with support for issuance of verifiable credentials, e.g. in the form of W3C Verifiable Credentials. This allows existing OpenID Connect OPs to extends their service and become credential issuers. It also allows new applications built using Verifiable Credentials to utilize OpenID Connect as integration and interoperability layer between credential holders and issuers. 
 
-OpenID Connect is an obvious choice for this use case since it already allows Relying Parties to request identity assertions. Verifiable Credentials are very similar in that they allow an Issuer to assert End-User claims. In contrast to the identity assertions, a verifiable credential follows a pre-defined schema (the credential type) and is bound to a key material allowing the holder to prove the legitimate possession of the credential. This allows direct presentation of the credential without involvment of the credential issuer. This specification caters for those differences. 
+OpenID Connect is an obvious choice for this use case since it already allows Relying Parties to request identity assertions. Verifiable Credentials are very similar in that they allow an Issuer to assert End-User claims. In contrast to the identity assertions, a verifiable credential follows a pre-defined schema (the credential type) and is bound to key material allowing the holder to prove the legitimate possession of the credential. This allows direct presentation of the credential without involvment of the credential issuer. This specification caters for those differences. 
 
 # Terminology
 
 Credential
 
-A set of one or more claims made by an issuer. (see [@VC_DATA]) Note that this definition differs from that in [OpenID].
+A set of one or more claims made by an issuer (see [@VC_DATA]). Note that this definition differs from that in [OpenID].
 
 Verifiable Credential (VC)
 
-A verifiable credential is a tamper-evident credential that has authorship that can be cryptographically verified. Verifiable credentials can be used to build verifiable presentations, which can also be cryptographically verified. (see [@VC_DATA])
+A verifiable credential is a tamper-evident credential that has authorship that can be cryptographically verified. Verifiable credentials can be used to build verifiable presentations, which can also be cryptographically verified (see [@VC_DATA]).
 
 Presentation
 
-Data derived from one or more verifiable credentials, issued by one or more issuers, that is shared with a specific verifier. (see [@VC_DATA])
+Data derived from one or more verifiable credentials, issued by one or more issuers, that is shared with a specific verifier (see [@VC_DATA]).
 
 Verified Presentation (VP)
 
-A verifiable presentation is a tamper-evident presentation encoded in such a way that authorship of the data can be trusted after a process of cryptographic verification. Certain types of verifiable presentations might contain data that is synthesized from, but do not contain, the original verifiable credentials (for example, zero-knowledge proofs). (see [@VC_DATA])
+A verifiable presentation is a tamper-evident presentation encoded in such a way that authorship of the data can be trusted after a process of cryptographic verification. Certain types of verifiable presentations might contain data that is synthesized from, but do not contain, the original verifiable credentials (for example, zero-knowledge proofs) (see [@VC_DATA]).
 
 W3C Verifiable Credential Objects
 
@@ -64,7 +64,7 @@ Both verifiable credentials and verifiable presentations
 
 Credential Manifests 
 
-A resource format that defines preconditional requirements, Issuer style preferences, and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential. (see [DIF.CredentialManifest])
+A resource format that defines preconditional requirements, Issuer style preferences, and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential (see [@DIF.CredentialManifest]).
 
 Deferred Credential Issuance
 
@@ -94,15 +94,15 @@ The user browses her university's home page, searching for a way to obtain a dig
 
 ## Issuer initiated credential issuance (cross device/ credential retrival only)
 
-The user visits the administration office of her university in order to obtain a digital diploma. The university staff checks her student card and looks up her university diploma in the universitie's IT system. The office staff then starts the issuance process. The user is asked to scan a QR Code in order to retrieve the digital diploma. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the offer to create a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
+The user visits the administration office of her university in order to obtain a digital diploma. The university staff checks her student card and looks up her university diploma in the university's IT system. The office staff then starts the issuance process. The user is asked to scan a QR Code in order to retrieve the digital diploma. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the offer to create a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
 
 ## Issuer initiated credential issuance (with pre-requisites)
 
 The user navigates to her university's webpage to obtain a digital diploma where she is asked to scan a QR Code to start the retrieval process. She scans the code with her smartphone, which automatically starts her wallet, where she is being notified of the pre-requisit to present her digital student card already stored in the wallet in order to receive a digital diploma (the verifiable credential). She consents, which causes the wallet to obtain and store the verifiable credential. 
 
-## Deferred Credential Issuance (Asynchronous Credential Issuance?)
+## Deferred Credential Issuance
 
-The user wants to obtain a digital criminal record certificate. She starts the journey in her wallet and is sent to the issuer service of the responsible government authority. She logs in with her eID and requests the issuance of the certificate. She is being notified that the issuance of the certificate will take a couple of days due to necessary background checks by the authority. She confirms and is sent back to the wallet. The wallet shows a hint in the credential list indicating that issuance of the digital criminal record certificate is under way. A few days later, she receives an e-Mail from the authority that the certificate was sucessfully issued. She visits her wallet, where she is asked after startup whether she wants to download the certificate. She confirms and the new credential is retrieved and stored in her wallet. 
+The user wants to obtain a digital criminal record certificate. She starts the journey in her wallet and is sent to the issuer service of the responsible government authority. She logs in with her eID and requests the issuance of the certificate. She is being notified that the issuance of the certificate will take a couple of days due to necessary background checks by the authority. She confirms and is sent back to the wallet. The wallet shows a hint in the credential list indicating that issuance of the digital criminal record certificate is under way. A few days later, she receives a notification from her wallet app telling her that the certificate was sucessfully issued. She opens her wallet, where she is asked after startup whether she wants to download the certificate. She confirms and the new credential is retrieved and stored in her wallet. 
 
 # Requirements
 
@@ -140,30 +140,37 @@ The following figure shows the overall flow.
 +--------------+   +-----------+                                         +-------------+
 | User         |   |   Wallet  |                                         |   Issuer    |
 +--------------+   +-----------+                                         +-------------+
-        |                |                                                      |
-        |                |                                                      |
-        |                |----------                                            |
-        |                |          | (1) [opt] obtain credential_manifest      |
-        |                |<---------                                            |
+        |                |                                                      |  
         |    interacts   |                                                      |
-        |--------------->|  (2) [opt] request presentation nonce                |
+        |--------------->|                                                      |
+        |                |  (1) [opt] obtain credential manifest                |
+        |                |----------------------------------------------------->|
+        |                |              credential manifest                     |
+        |                |<-----------------------------------------------------|
+        |                |                                                      |
+      (2) [opt] User selects credentials                                        |          
+        |                |                                                      |
+        |                |  (3) [opt] request presentation nonce                |
         |                |----------------------------------------------------->|
         |                |      presentation nonce                              |
         |                |<-----------------------------------------------------|
         |                |                                                      |
-        |                |  (3.1) authorization req (claims, [opt] input, etc. )|
+        |                |  (4) authorization req (claims, [opt] input, etc. )  |
         |                |----------------------------------------------------->|
         |                |                                                      |
-    (4) User Login & Consent                                                    |
+    (4.1) User Login & Consent                                                  |
         |                |                                                      |
-        |                |  (5.1) [opt] request additional VCs (OIDC4VP)        |
+        |                |  (4.2) [opt] request additional VCs (OIDC4VP)        |
         |                |<-----------------------------------------------------| 
         |                |                                                      |
-    (5.2) User Consent                                                          |
-        |                |  (5.3) VCs in Verifiable Presentations               |
+    (4.2.1) [opt] User selects credentials                                      |
+        |                |                                                      |
+        |                |  (4.2.2) VCs in Verifiable Presentations             |
         |                |----------------------------------------------------->| 
         |                |                                                      |
-        |                |  (3.2) authorization res (code)                      |
+        |   (4.3) User consents to credential issuance                          |
+        |                |                                                      |
+        |                |  (5) authorization res (code)                        |
         |                |<-----------------------------------------------------|
         |                |                                                      |
         |                |  (6) token req (code)                                |
@@ -195,14 +202,15 @@ It is assumed that the wallet has already obtained knowledge about what credenti
 Credential Issuer offers and whether this issuer expects the holder to present existing credentials
 as part of the issuance flow. 
 
-(1) (OPTIONAL) obtain `credential_manifest` with an information of which VCs the Issuer can issue, and optionally what kind of input from the user the Issuer requires to issue that credential.
+(1) (OPTIONAL) obtain credential manifest (as defined in [@DIF.CredentialManifest]) with an information of which Verifiable Credentials the Issuer can issue, and optionally what kind of input from the user the Issuer requires to issue that credential.
 
 (2) (OPTIONAL) If the issuer expects certain credentials to be presented in the issuance flow (and the wallet contains suitable credentials), the wallet prepares the process by obtaining a nonce from the issuer. This nonce will be used to prevent malicious wallets from being able to replay those presentations. 
 
 (3.1) In this step, the wallet sends an authorization request to the issuer. This request determines
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
-Note: the wallet MAY utilize a pushed authorization request to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
+
+Note: the wallet MAY utilize a pushed authorization request (see [@!RFC9126]) to first send the payload of the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
 request. 
 
 (4) The issuer takes over user interface control and interacts with the user. It will authenticate the
