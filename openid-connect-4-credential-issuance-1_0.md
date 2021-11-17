@@ -44,7 +44,7 @@ OpenID Connect is an obvious choice for this use case since it already allows Re
 
 Credential
 
-A set of one or more claims made by an issuer (see [@VC_DATA]). Note that this definition differs from that in [OpenID].
+A set of one or more claims made by an issuer (see [@VC_DATA]). Note that this definition differs from that in [@OpenID].
 
 Verifiable Credential (VC)
 
@@ -218,8 +218,12 @@ regarding the authorization request URL.
 The issuer takes over user interface control at this point and interacts with the user. The implementation of 
 this step is at the discretion of the issuer.  
 
-(4.1)  The issuer will typically authenticate the user in the first step of this process. The issuer might, 
-for example, use a local or federated login for that purpose.
+(4.1)  The issuer will typically authenticate the user in the first step of this process. For this purpose,
+the issuer might
+
+* use a local or federated login, potentially informed by an `id_token_hint` (see [@OpenID]) or
+* utilize, if present, verifiable presentations passed to the authorization request.
+
 
 (4.2) (OPTIONAL) The issuers MAY call back to the wallet to fetch verifiable credentials it needs as
 pre-requisite to issuing the requested credentials. The decision what credentials are requested may depend 
