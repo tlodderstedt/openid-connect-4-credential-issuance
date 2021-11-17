@@ -481,6 +481,9 @@ Below is a non-normative example of a `proof` parameter:
 }
 ```
 
+[TLT] I'm not happy with this design. Use of the access token hash as the nonce effectively makes the access token one time use or the nonce is potentially used 
+multiple times. I'm all for using an independent nonce and suggest the following design: The credential endpoint responds with an error and a fresh nonce, if the request does not contain a proof or the proof is invalid. As an optimization, the token response and every sucessful credential response also contains a credential nonce. 
+
 Below is a non-normative example of a credential request:
 
 ```
