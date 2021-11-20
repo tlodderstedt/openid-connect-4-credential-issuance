@@ -210,10 +210,13 @@ Note: The wallet MAY also obtain the information about the credential issuer's c
 the types of verifiable credentials the wallet (on behalf of the user) wants to obtain. It MAY also
 include verifiable presentations if required by the issuer. 
 
-Note: the wallet MAY utilize a pushed authorization request (see [@!RFC9126]) to first send the payload of 
+The wallet SHOULD use a pushed authorization request (see [@!RFC9126]) to first send the payload of 
 the authorization request to the issuer and subsequently use the `request_uri` returned by the issuer in the authorization
-request. This ensures integrity of the request data and prevents any issues raised by URL length restrictions 
+request. This ensures integrity and confidentiality of the request data and prevents any issues raised by URL length restrictions 
 regarding the authorization request URL.
+
+Note: signed and encrypted request objects would also ensure integrity and confidentiality. However, this approach would further 
+increase the URL size, which might decrease robustness of the process. 
 
 The issuer takes over user interface control at this point and interacts with the user. The implementation of 
 this step is at the discretion of the issuer.  
