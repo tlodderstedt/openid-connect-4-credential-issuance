@@ -336,10 +336,6 @@ Below is a non-normative example of a `claims` parameter:
 }
 ```
 
-Note: Nat in his [comment](https://bitbucket.org/openid/connect/issues/1276/section-22-missing-parameter-to-determine#comment-61325439) has also proposed using `scope`. We need to discuss whether 
-we should pursue this option because it is limited. Dynamic scope values are possible according to [@!RFC6749], but support in libraries and products varies. Moreover, a scope would not allow to pass 
-multiple credential types and additional requirements, such as the `format` property.
-
 ```json=
 GET /authorize?
     response_type=code
