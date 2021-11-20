@@ -381,12 +381,7 @@ The Token Endpoint is used in the same manner as for the Authorization Code Flow
 
 ### Token Request
 
-Upon receivina a successful Authentication Request, a Token Request is made as defined in Section 3.1.3.1 of [@!OpenID].
-
-* grant_type 
-  * REQUIRED. The value MUST be authorization_code  
-* code
-  * REQUIRED. The value MUST be the value of the code parameter received in the Authorization Response.
+Upon receiving a successful Authentication Request, a Token Request is made as defined in Section 3.1.3.1 of [@!OpenID].
 
 Below is a non-normative example of a token request:
 ```
@@ -403,7 +398,12 @@ POST /token HTTP/1.1
 
 ### Successful Token Response
 
-Authentication Requests are made as defined in Section 3.1.3.3 of [@!OpenID].
+Token Requests are made as defined in Section 3.1.3.3 of [@!OpenID].
+
+In addition to the response parameters defined in Section 3.1.3.3 of [@!OpenID], the OP MAY return the following parameters:
+
+* `c_nonce`: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a credentials (see (#credential_request)).
+* `c_nonce_expires_in`: OPTIONAL. JSON integer denoting the lifetime in seconds of the `c_nonce`.
 
 Below is a non-normative example of a token response:
 ```
@@ -417,12 +417,12 @@ HTTP/1.1 200 OK
     "token_type": "bearer",
     "expires_in": 86400,
     "id_token": "eyJodHRwOi8vbWF0dHIvdGVuYW50L..3Mz",
+    "c_nonce": "tZignsnFbp",
+    "c_nonce_expires_in": 86400
   }
 ```
 
-Note: Nat in his comment, proposed to return a separate access_token for the Credential Endpoint. As proposed by DW in the IIW session, we keep the protocol design simple 
-at that point and return credentials at the dedicated endpoints only. Returning with the token response is an optimization we can introduce as needed once the parameters
-for requesting credentials are settled. 
+Note: Nat in his comment, proposed to return a credenzial resource along with a separate access_token for this resource. As proposed by DW in the IIW session, we keep the protocol design simple at that point and return credentials at the dedicated endpoints only. Returning with the token response is an optimization we can introduce as needed once the parameters for requesting credentials are settled. 
 
 ### Token Error Response
 
@@ -449,7 +449,7 @@ The Credential Endpoint performs Issuance of a credential as approved by the End
 
 Communication with the Credential Endpoint MUST utilize TLS. 
 
-### Credential Request
+### Credential Request {#credential_request}
 
 A Client makes a Credential Request by presenting the following parameters:
 
@@ -465,11 +465,10 @@ bound to. The `proof` structure depends on the proof type. At the minimum, the f
   * `verificationMethod` REQUIRED. cryptographically resolvable identifier
   * `jws` CONDITIONAL. A signature performed by a key that can be obtained by an identifier in verificationMethod.
 
-Note: The SHA256 hash of the access token MUST be used as nonce in every `proof` element. The 
-way it is incorporated depends on the proof type. In a LD proof, for example, the nonce is included as `challenge` element 
-in the proof object. The proof MUST also contain the issuer of the credential request. In a LD proof, for example, the 
-intended audience is included as `domain` element. Together this data allow the issuer to detect replay attempts of the 
-proof objects. 
+The `proof` element MUST incoporate a fresh nonce value generate by the credential issuer and the credential 
+issuer's identifier (audience) in order to allow the credential issuer to detect replay. The way those data is incorporated
+depends on the proof type. In a LD proof, for example, the nonce is included as `challenge` element 
+in the proof object and the issuer (the intended audience) is included as `domain` element. 
 
 Below is a non-normative example of a `proof` parameter:
 
@@ -484,9 +483,6 @@ Below is a non-normative example of a `proof` parameter:
   "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..l9d0YHjcFAH2H4dB9xlWFZQLUpixVCWJk0eOt4CXQe1NXKWZwmhmn9OQp6YxX0a2LffegtYESTCJEoGVXLqWAA",
 }
 ```
-
-[TLT] I'm not happy with this design. Use of the access token hash as the nonce effectively makes the access token one time use or the nonce is potentially used 
-multiple times. I'm all for using an independent nonce and suggest the following design: The credential endpoint responds with an error and a fresh nonce, if the request does not contain a proof or the proof is invalid. As an optimization, the token response and every sucessful credential response also contains a credential nonce. 
 
 Below is a non-normative example of a credential request:
 
@@ -508,10 +504,12 @@ OPTIONAL. Used when making a Signed Claimset Request, defines the key material t
 
 ### Credential Response (synchronous flow)
 
-When the Issuer can immideately issue a requested credential and wants to send an issued credential to the Client, the Credential Response MUST return the following parameter:
+When the Issuer can immediately issue a requested credential and wants to send an issued credential to the Client, the Credential Response MUST return the following parameter:
 
 * `credential`: REQUIRED. the issued credentials.
 * `format`: REQUIRED. JSON string denoting the credential's format
+* `c_nonce`: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a credentials (see (#credential_request)).
+* `c_nonce_expires_in`: OPTIONAL. JSON integer denoting the lifetime in seconds of the `c_nonce`.
 
 Below is a non-normative example of a credential response in a synchronous flow of a Simple Issuance Response:
 
@@ -523,17 +521,22 @@ HTTP/1.1 200 OK
 
 {
   "format": "jwt_vc"
-  "credential" : "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L"      
+  "credential" : "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L",
+  "c_nonce": "fGFF7UkhLa",
+  "c_nonce_expires_in": 86400  
 }
 ```
 
 ### Credential Response (deferred flow)
 
-When the Issuer cannot immideately issue a requested credential and wants to send a token that the Client can later use to receive a credential once it is ready, the Credential Response MUST return the following parameter:
+When the Issuer cannot immediately issue a requested credential and wants to send a token that the Client can later use to receive a credential once it is ready, the Credential Response MUST return the following parameter:
 
 * `acceptance_token`: REQUIRED. A JSON string containing a token subseuqntly used to obtain a credential.
+* `c_nonce`: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a credentials (see (#credential_request)).
+* `c_nonce_expires_in`: OPTIONAL. JSON integer denoting the lifetime in seconds of the `c_nonce`.
 
 Below is a non-normative example of a credential response in a deferred flow:
+
 ```
 HTTP/1.1 200 OK
   Content-Type: application/json
@@ -541,11 +544,40 @@ HTTP/1.1 200 OK
   Pragma: no-cache
 
 {
-  "acceptance_token": "8xLOxBtZp8"
+  "acceptance_token": "8xLOxBtZp8",
+  "c_nonce": "wlbQc6pCJp",
+  "c_nonce_expires_in": 86400  
 }
 ```
 
 Note: Nat suggested CIBA Ping/Push callback can be used. Another option would be the Client providing client_notification_token to the Issuer, so that the issuer send Credential response of successfully receiving a Creedntial request and than no need for the client to bring an acceptance token, the Issuer will send the credential once it is issued in a response that includes client_notification_token.
+
+### Credential Issuer-Provided Nonce
+
+The credential issuer MAY require the client to send a proof of possession of the key material it wants a credential 
+to be bound to. This proof MUST incorporate a nonce generated by the credential issuer. The credential issuer will 
+provide the client with a nonce in an error response to any credential request not including such a proof or including 
+an invalid proof. 
+
+* `c_nonce`: REQUIRED. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a credentials (see (#credential_request)).
+* `c_nonce_expires_in`: OPTIONAL. JSON integer denoting the lifetime in seconds of the `c_nonce`.
+
+```
+HTTP/1.1 400 Bad Request
+  Content-Type: application/json
+  Cache-Control: no-store
+  Pragma: no-cache
+
+{
+  "error": "invalid_or_missing_proof"
+  "error_description":
+       "Credential isser requires proof element in credential request"
+  "c_nonce": "8YE9hCnyV2",
+  "c_nonce_expires_in": 86400  
+}
+```
+
+The credential issuer MAY also provide the `c_nonce` and `c_nonce_expires_in` in sucessful token and credential responses. 
 
 # Flow 2: Credential Manifest Flow Overview (with submission of input VCs)
 
