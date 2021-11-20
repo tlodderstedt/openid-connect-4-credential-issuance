@@ -475,7 +475,8 @@ format based on the clients format default.
 bound to. The `proof` structure depends on the proof type. At the minimum, the following parameters MUST be included:
 
   * `type`: REQUIRED. JSON String denoting the proof type.
-  * `verificationMethod` REQUIRED. cryptographically resolvable identifier
+  * `verificationMethod` REQUIRED. cryptographically resolvable identifier. This identifier MUST match the DID given
+  in `did` parameter. 
   * `jws` CONDITIONAL. A signature performed by a key that can be obtained by an identifier in verificationMethod.
 
 The `proof` element MUST incoporate a fresh nonce value generate by the credential issuer and the credential 
@@ -964,6 +965,11 @@ The technology described in this specification was made available from contribut
 # Document History
 
    [[ To be removed from the final specification ]]
+
+   -01
+
+   * Added Request & Response syntax and descriptions
+   * Reworked and extended sequence diagram
 
    -00 
 
