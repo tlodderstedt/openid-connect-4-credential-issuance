@@ -457,6 +457,11 @@ The Credential Endpoint performs Issuance of a credential as approved by the End
 
 Communication with the Credential Endpoint MUST utilize TLS. 
 
+Note: Assumptions: 
+
+* The client can request issuance of a certain credential type multiple times, e.g. to associate the credential with different DIDs/public keys or to refresh a certain credential.
+* If the access token is good for requesting issuance of diferent credentials, the order in which the client requests the credential issuance is at the client's discretion. 
+
 ### Credential Request {#credential_request}
 
 A Client makes a Credential Request by presenting the following parameters:
@@ -771,6 +776,14 @@ When the Issuer cannot immideately issue a requested credential and wants to sen
 This section describes how the Issuer can obtain additional credentials from the End-user if the input submitted by the End-user in the authorization request was not sufficient. The flow utilizes [OIDC4VP] to dynamically request additional credentials. The flow can be used with both Simple Issuance Flow and Credential Manifest Flow.
 
 This provides the benefit of the Issuer being able to adhere to the principle of data minimization, for example by including only minimum requirements in the Credentiam Manifest knowing that it can supplement additional information if needed.
+
+In order to enable dynamic callbacks of the issuer to the end-user's wallet, the wallet will provide the following additional parameters in the authorization request: 
+
+* `wallet_issuer`: OPTIONAL. JSON String containing the wallet's OpenID Connect Issuer URL. The issuer will use the discovery process as defined in [@SIOP]
+to determine the wallet's capabilities and endpoints. 
+* `user_hint`: OPTIONAL. JSON String containing an opaque usr hint the wallet MAY use in sub-sequent callbacks to optimize the user's experience. 
+
+TBD: credential issuer's client_id with wallet
 
 # ToDo
 
