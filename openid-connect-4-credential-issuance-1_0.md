@@ -227,7 +227,6 @@ the issuer might
 * use a local or federated login, potentially informed by an `id_token_hint` (see [@OpenID]) or
 * utilize, if present, verifiable presentations passed to the authorization request.
 
-
 (4.2) (OPTIONAL) The issuers MAY call back to the wallet to fetch verifiable credentials it needs as
 pre-requisite to issuing the requested credentials. The decision what credentials are requested may depend 
 on the user identity determined in step 4.1.
