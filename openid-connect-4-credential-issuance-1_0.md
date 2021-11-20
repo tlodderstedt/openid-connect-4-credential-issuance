@@ -307,12 +307,20 @@ The Authorization Endpoint is used in the same manner as for the Authorization C
  
 ### Authorization Request
 
-Authentication Requests are made as defined in Section 3.1.2.1 of [@!OpenID], except that it MUST include the `claims` parameter defined in section 5.5 of [@!OpenID] with a new top-level element `credential`. This element contains type and format of a desired credential as defined below:
+Authentication Requests are made as defined in Section 3.1.2.1 of [@!OpenID], except that it MUST include the `claims` parameter defined in section 5.5 of [@!OpenID] with a new top-level element `credentials`. 
 
-* `type`
-  * REQUIRED. A JSON array of objects. Each object represents a string of a valid URI for a schema of a requested credential
-* `format`
-  * REQUIRED. A JSON array of strings that representing a format in which credential is requested to be issued. Valid values are `jwt_vc` and `ldp_vc`.
+* `credentials`: JSON array containing one or more objectes specifying credentials the client wants to be issued.
+
+Every credential object has the following properties:
+
+* `type`: REQUIRED. A JSON string denoting the type of the requested credential.
+* `format`: OPTIONAL. A JSON string representing a format in which the credential is requested to be issued. 
+Valid values defined by this specification are `jwt_vc` and `ldp_vc`. Profiles of this specification MAY define 
+addtional format values.  
+
+Note: passing the format to the authorization request is informational and allows the credential issuer to 
+refuse early, in case it does not support the requested format/credential combination. The client MAY request 
+issuance of credentials in other formats as well later in the process.
 
 Below is a non-normative example of an authorization request:
 ```
@@ -325,17 +333,18 @@ Below is a non-normative example of an authorization request:
     &state=af0ifjsldkj
 ```
 
-Below is a non-normative example of a `claims` parameter:
+Below is a non-normative example of a `claims` parameter including the `credentials` element:
 ```json=
 {
-    "credential": {
-        "type": ["uri":"https://did.example.org/healthCard","https://did.exmaple.org/mDL"],
-        "format": "ldp_vc"
-    },
-    "id_token": {
-      "auth_time": {"essential": true},
-      "acr": {"values": ["urn:mace:incommon:iap:silver"] }
-    }
+   "credentials":[
+      {
+         "type":"https://did.example.org/healthCard",
+         "format":"ldp_vc"
+      },
+      {
+         "type":"https://did.exmaple.org/mDL"
+      }
+   ]
 }
 ```
 
