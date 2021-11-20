@@ -779,15 +779,13 @@ This provides the benefit of the Issuer being able to adhere to the principle of
 
 In order to enable dynamic callbacks of the issuer to the end-user's wallet, the wallet will provide the following additional parameters in the authorization request: 
 
-* `wallet_issuer`: OPTIONAL. JSON String containing the wallet's OpenID Connect Issuer URL. The issuer will use the discovery process as defined in [@SIOP]
+* `wallet_issuer`: OPTIONAL. JSON String containing the wallet's OpenID Connect Issuer URL. The issuer will use the discovery process as defined in [@SIOPv2]
 to determine the wallet's capabilities and endpoints. 
 * `user_hint`: OPTIONAL. JSON String containing an opaque usr hint the wallet MAY use in sub-sequent callbacks to optimize the user's experience. 
 
 TBD: credential issuer's client_id with wallet
 
 # ToDo
-
-- add DIF.CredentialManifest informative reference
 
 {backmatter}
 
