@@ -3,11 +3,11 @@
 actor User as U
 participant Wallet as W
 box Issuer
-participant "Init" as init
-participant "Authorize" as AS
-participant "Token" as T
-participant "Credentials" as P
-participant "Poll Credentials" as I
+participant "Nonce Endpoint" as init
+participant "Authorization Endpoint" as AS
+participant "Token Endpoint" as T
+participant "Credential Endpoint" as P
+participant "Deferred Credential" as I
 end box
 autoactivate on
 hide footbox
@@ -15,8 +15,8 @@ hide footbox
 U -> W: interact
 note over W: Wallet discovers input material\nrequired to request issuance\nof a certain credential (Optional)
 
-W -> init: init_presentation
-return presentation_nonce
+W -> init: get_presentation_nonce
+return p_nonce
 
 W -> W: prepare presentations (bound to presentation_nonce)
 deactivate W
@@ -28,15 +28,13 @@ note over AS: Issuer will authenticate user or utilize credentials or assertions
 return code
 
 W -> T: token (code, code_verifier)
-return access_token, id_token
+return access_token, id_token(, c_nonce)
 
-W->P: credentials (access_token, bindable proofs)
+W->P: credentials (access_token, credential type, bindable proof)
 
-note over P: access token hash is used as challenge
+return credential or acceptance_token
 
-return credentials or acceptance_token
-
-W->I: poll_credential (accptance_token)
-return credentials
+W->I: deferred credential request (accptance_token)
+return credential
 
 @enduml
