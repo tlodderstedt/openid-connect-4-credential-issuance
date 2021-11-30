@@ -313,7 +313,7 @@ The following endpoints are extended:
 
 * Server Metadata: new metadata parameters are added to allow the RP to determine what types of verifiable credentials a particular OP is able to issue along with additional information about formats and prerequisites. 
 * Authorization Endpoint: The `claims` parameter is extended to allow the RP to request authorization for issuance of one or more credentials. The authorization request is extended with parameters to convey verifiable presentations to the authorization process and further data to alternatively callback to the RP (acting as wallet) to request further verifiable credentials. These extensions can also be used via the Pushed Authorization Endpoint, which is recommended by this specification. 
-* Token Endpoint: optional parameters are added to the token endpoint to provide the RP with a nonce to used for proof of possession of key material in a subsequent request to the credential endpoint. 
+* Token Endpoint: optional parameters are added to the token endpoint to provide the RP with a nonce to be used for proof of possession of key material in a subsequent request to the credential endpoint. 
 
 ## Server Metadata
 
@@ -324,7 +324,7 @@ Credential Manifest contains information about which type of VCs the Issuer can 
 This specification defines the following new Server Metadata parameter for this purpose:
 
 * `credential_manifests`: OPTIONAL. A JSON array containing a list of Credential Manifests. This parameter enables Issuers to pass Credential Manifests in a single , self-contained parameter.
-* `credential_manifest_uri`: OPTIONAL. A JSON array containing a list of URIs referencing a resouce containing Credential Manifest. This parameter enables Issuers to list Credential Manifests by reference, rather than by value. The scheme used MUST be https. 
+* `credential_manifest_uris`: OPTIONAL. A JSON array containing a list of URIs referencing a resouce containing Credential Manifest. This parameter enables Issuers to list Credential Manifests by reference, rather than by value. The scheme used MUST be https. 
 
 The following example shows a OpenID Configuration containing an embedded credential manifest. 
 
@@ -343,52 +343,18 @@ The following example shows a OpenID Configuration containing an embedded creden
          "version":"0.1.0",
          "issuer":{
             "id":"did:example:123?linked-domains=3",
-            "name":"Washington State Government",
-            "styles":{
-               
-            }
-         },
+            "name":"Washington State Government"
+          },
          "output_descriptors":[
             {
                "schema":"http://washington-state-schemas.org/1.0.0/driver-license.json",
-               "display":{
-                  "title":{
-                     "path":[
-                        "$.name",
-                        "$.vc.name"
-                     ],
-                     "fallback":"Washington State Driver License"
-                  },
-                  "subtitle":{
-                     "path":[
-                        "$.class",
-                        "$.vc.class"
-                     ],
-                     "fallback":"Class A, Commercial"
-                  },
-                  "description":{
-                     "text":"License to operate a vehicle with a gross combined weight rating (GCWR) of 26,001 or more pounds, as long as the GVWR of the vehicle(s) being towed is over 10,000 pounds."
-                  },
-                  "properties":[
-                     {
-                        "path":[
-                           "$.donor",
-                           "$.vc.donor"
-                        ],
-                        "fallback":"Unknown",
-                        "label":"Organ Donor"
-                     }
-                  ]
-               },
-               "styles":{
-                  
-               }
+               "id": "output descriptor 1"
             }
          ],
          "presentation_definition":{}
-      }
+     }
    ]
-}
+  }
 ```
 
 Note: the RP MAY use other mechanisms obtain information about the verifiable credentials an OP can issue.
@@ -405,7 +371,7 @@ Communication with the Nonce Endpoint MUST utilize TLS.
 
 Clients MUST use the HTTP POST method to send the Presentation Nonce Request to the Nonce Server. The Request SHOULD NOT include any parameters.
 
-The rules for client authentication as defined in [@!RFC6749] for token endpoint requests, including the applicable authentication methods, apply for the Nonce endpoint as well. If applicable, the `token_endpoint_auth_method` client metadata parameter [@!RFC7591] indicates the registered authentication method for the client to use when making direct requests to the authorization server, including requests to the Nonce endpoint. Similarly, the `token_endpoint_auth_methods_supported` authorization server metadata [RFC8414] parameter lists client authentication methods supported by the authorization server when accepting direct requests from clients, including requests to the PAR endpoint.
+The rules for client authentication as defined in [@!RFC6749] for token endpoint requests, including the applicable authentication methods, apply for the Nonce endpoint as well. If applicable, the `token_endpoint_auth_method` client metadata parameter [@!OpenID.Registration] indicates the registered authentication method for the client to use when making direct requests to the authorization server, including requests to the Nonce endpoint. Similarly, the `token_endpoint_auth_methods_supported` authorization server metadata [@!OpenID.Discovery] parameter lists client authentication methods supported by the authorization server when accepting direct requests from clients, including requests to the PAR endpoint.
 
 Below is a non-normative example of a presentation nonce request using `client_secret_basic` Client Authentication:
 
@@ -564,9 +530,27 @@ Note to the editors: need to sort out credential issuer's client_id with wallet 
 
 Authentication Responses MUST be made as defined in Section 3.1.2.5 of [@!OpenID].
 
+Below is a non-normative example of
+```
+HTTP/1.1 302 Found
+  Location: https://wallet.example.org/cb?
+    code=SplxlOBeZQQYbYS6WxSbIA
+    &state=af0ifjsldkj
+```
+
 ### Authentication Error Response
 
 Authentication Error Response MUST be made as defined in section 3.1.2.6 of [@!OpenID].
+
+The following is a non-normative example of an unsuccessful token response.
+
+```json=
+HTTP/1.1 302 Found
+Location: https://client.example.net/cb?
+    error=invalid_request
+    &error_description=Unsupported%20response_type%20value
+    &state=af0ifjsldkj
+```
 
 ## Token Endpoint
 
@@ -575,6 +559,18 @@ The Token Endpoint issues an Access Token, an ID Token, and optionally a Refresh
 ### Token Request
 
 Upon receiving a successful Authentication Request, a Token Request is made as defined in Section 3.1.3.1 of [@!OpenID].
+
+Below is a non-normative example of a token request:
+```
+POST /token HTTP/1.1
+  Host: server.example.com
+  Content-Type: application/x-www-form-urlencoded
+  Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+  grant_type=authorization_code
+  &code=SplxlOBeZQQYbYS6WxSbIA
+  &redirect_uri=https%3A%2F%2Fwallet.example.org%2Fcb
+  
+```
 
 ### Successful Token Response
 
@@ -605,6 +601,18 @@ HTTP/1.1 200 OK
 ### Token Error Response
 
 If the Token Request is invalid or unauthorized, the Authorization Server constructs the error response as defined as in Section 5.2 of OAuth 2.0 [RFC6749].
+
+The following is a non-normative example Token Error Response:
+
+```json=
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+Pragma: no-cache
+{
+   "error": "invalid_request"
+}
+```
 
 ## Credential Endpoint
 
@@ -919,28 +927,6 @@ TBD
             <organization>Microsoft</organization>
           </author>
           <date day="8" month="Nov" year="2014"/>
-        </front>
- </reference>
-
-<reference anchor="RFC9126" target="https://datatracker.ietf.org/doc/html/rfc9126">
-        <front>
-          <title>OAuth 2.0 Pushed Authorization Requests</title>
-      <author fullname="T. Lodderstedt">
-            <organization>yes.com</organization>
-          </author>
-          <author fullname="B. Campbell">
-            <organization>Ping Identity</organization>
-          </author>
-          <author fullname="N. Sakimura">
-            <organization>Nat.Consulting</organization>
-          </author>
-          <author fullname="D. Tonge">
-            <organization>Moneyhub Financial Technology</organization>
-          </author>
-          <author fullname="F. Skokan">
-            <organization>Auth0</organization>
-          </author>
-          <date month="Feb" year="2021"/>
         </front>
  </reference>
 
