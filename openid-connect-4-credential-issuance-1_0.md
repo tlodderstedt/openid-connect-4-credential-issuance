@@ -127,7 +127,7 @@ This section describes the requirements this specification aims to fulfill beyon
 * It shall be possible to request standard OIDC claims and credentials in the same flow (to implement wallet onboarding, see EBSI/ESSIF onboarding)
 * Support for Credential metadata (holder shall be able to determine the types of credential an issuer is able to issue)
 * Ensure OP is authoritative for respective credential issuer (OP (OIDC issuer URL) <-> Issuer ID (DID))
-* IncoClientorate/utilize existing specs
+* Incorporate/utilize existing specs
   * W3C VC HTTP API(?)
   * DIF Credential manifest(?)
 
